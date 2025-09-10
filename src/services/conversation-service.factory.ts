@@ -4,7 +4,10 @@ import { GenericAIService } from './generic-ai.service';
 import { LocalBuddyConversationService } from './local-buddy-conversation.service';
 import { ClassroomConversationService } from './classroom-conversation.service';
 
-export type ConversationScenario = 'local-buddy' | 'classroom';
+export type ConversationScenario =
+  | 'local-buddy'
+  | 'officer'
+  | 'hotel-receptionist';
 
 @Injectable()
 export class ConversationServiceFactory {
@@ -18,7 +21,9 @@ export class ConversationServiceFactory {
     switch (scenario) {
       case 'local-buddy':
         return this.localBuddyService;
-      case 'classroom':
+      case 'officer':
+        return this.localBuddyService;
+      case 'hotel-receptionist':
         return this.classroomService;
       default:
         return this.localBuddyService;
@@ -26,6 +31,6 @@ export class ConversationServiceFactory {
   }
 
   getAvailableScenarios(): ConversationScenario[] {
-    return ['local-buddy', 'classroom'];
+    return ['local-buddy', 'officer', 'hotel-receptionist'];
   }
 }

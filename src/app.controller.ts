@@ -21,7 +21,6 @@ export class AppController {
     @Body('action') action?: string,
     @Body('scenario') scenario: ConversationScenario = 'local-buddy',
   ): Promise<any> {
-    // Get the appropriate conversation service based on scenario
     const conversationService =
       this.conversationServiceFactory.getService(scenario);
 
@@ -54,10 +53,7 @@ export class AppController {
       progress: conversationService.getConversationProgress(),
     };
 
-    // Advance to next step (in a real implementation, this might be based on content analysis)
     if (!conversationService.isConversationComplete()) {
-      // For demo purposes, we'll advance after each message
-      // In a real implementation, you might want to analyze the content to determine when to advance
       conversationService.advanceToNextStep();
     }
 
