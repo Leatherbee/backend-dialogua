@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BaseConversationService } from './base-conversation.service';
-import { GenericAIService } from './generic-ai.service';
+import { BaseConversationService } from '../base-conversation.service';
+import { OpenAIService } from '../openai.service';
 import {
   ConversationStep,
   ScenarioContext,
   SystemPromptBuilder,
-} from '../interfaces/conversation.interface';
+} from '../../interfaces/conversation.interface';
 
 // Classroom scenario prompt builder
 export class ClassroomPromptBuilder implements SystemPromptBuilder {
@@ -102,7 +102,7 @@ export const CLASSROOM_CONTEXT: ScenarioContext = {
 
 @Injectable()
 export class ClassroomConversationService extends BaseConversationService {
-  constructor(protected readonly aiService: GenericAIService) {
+  constructor(protected readonly aiService: OpenAIService) {
     super(aiService);
     // Initialize with classroom specific configuration
     this.initializeConversation(

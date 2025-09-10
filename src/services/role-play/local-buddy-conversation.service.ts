@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BaseConversationService } from './base-conversation.service';
-import { GenericAIService } from './generic-ai.service';
+import { BaseConversationService } from '../base-conversation.service';
+import { OpenAIService } from '../openai.service';
 import {
   ConversationStep,
   ScenarioContext,
   SystemPromptBuilder,
-} from '../interfaces/conversation.interface';
+} from '../../interfaces/conversation.interface';
 
 export class LocalBuddyPromptBuilder implements SystemPromptBuilder {
   buildPrompt(
@@ -73,67 +73,41 @@ ${stepContext.recent_dialog ?? ''}
 export const LOCAL_BUDDY_STEPS: ConversationStep[] = [
   {
     step_id: 'step1',
-    step_goal: 'Sapaan di bandara',
-    target_vocab: [
-      'Halo',
-      'Selamat pagi',
-      'Selamat siang',
-      'Selamat malam',
-      'Apa kabar',
-    ],
-    hints: [
-      "Mulai dengan salam sederhana seperti 'Selamat siang!'",
-      "Jika pengguna diam, ulangi salam dengan versi lain: 'Halo!'",
-    ],
+    step_goal: 'Menyapa di bandara',
+    target_vocab: ['Halo', 'Selamat pagi', 'Selamat siang', 'Selamat malam'],
+    hints: ["Mulai dengan salam sederhana seperti 'Halo' atau 'Selamat siang'"],
     recent_dialog: '',
   },
   {
     step_id: 'step2',
-    step_goal: 'Perkenalan nama secara sopan',
-    target_vocab: ['Nama saya Yudha', 'Nama kamu siapa', 'Senang kenal kamu'],
-    hints: [
-      "Tanyakan nama: 'Nama saya Yudha. Nama kamu siapa?'",
-      "Fallback lebih mudah: 'Siapa nama kamu?'",
-    ],
+    step_goal: 'Tukar nama dengan sopan',
+    target_vocab: ['Nama saya...', 'Siapa nama kamu?'],
+    hints: ["Sebutkan nama kamu dengan 'Nama saya ...'"],
     recent_dialog: '',
   },
   {
     step_id: 'step3',
     step_goal: 'Menyebutkan asal negara',
-    target_vocab: ['Saya dari ...', 'Kamu dari mana', 'Asal negara'],
-    hints: [
-      "Tanya asal: 'Kamu dari mana?'",
-      "Contoh jawaban: 'Saya dari Jepang.'",
-    ],
+    target_vocab: ['Saya dari...', 'Dari mana asal kamu?'],
+    hints: ["Jawab dengan asal negara, misalnya 'Saya dari Jepang'"],
     recent_dialog: '',
   },
   {
     step_id: 'step4',
-    step_goal: 'Mengarahkan tujuan ke kampus/asrama',
-    target_vocab: [
-      'Ayo kita ke kampus Universitas Negeri',
-      'Kamu mau ke asrama',
-      'Pergi ke kampus',
-    ],
-    hints: [
-      "Arahkan tujuan: 'Ayo kita ke kampus Universitas Negeri.'",
-      "Opsional ringan: tanya 'Kamu capek? Mau minum dulu?' tanpa keluar jalur.",
-    ],
+    step_goal: 'Membicarakan tujuan selanjutnya (kampus/asrama)',
+    target_vocab: ['Kamu mau ke asrama?', 'Kita pergi ke kampus'],
+    hints: ['Kaitkan percakapan dengan kampus atau asrama'],
     recent_dialog: '',
   },
   {
     step_id: 'step5',
-    step_goal: 'Penutup ramah',
-    target_vocab: ['Senang bertemu kamu', 'Terima kasih', 'Sampai jumpa'],
-    hints: [
-      "Tutup sopan: 'Senang bertemu kamu!'",
-      'Boleh tambah terima kasih singkat.',
-    ],
+    step_goal: 'Mengucapkan terima kasih sebelum mengakhiri percakapan',
+    target_vocab: ['Terima kasih'],
+    hints: ["Tutup percakapan dengan sopan, misalnya 'Terima kasih'"],
     recent_dialog: '',
   },
 ];
 
-// Local Buddy specific scenario context
 export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
   scenario_code: 'airport_pickup_bipa1',
   scenario_title: 'Airport Pickup – Universitas Negeri',
@@ -147,6 +121,10 @@ export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
     'Selalu tunggu respons pengguna sebelum lanjut ke topik berikutnya.',
     'Ikuti urutan modular step 1 sampai 5, jangan melompat.',
     "Jangan ganti nama. Tetap gunakan 'Yudha'.",
+    'Boleh menambahkan topik ringan di luar Step Goal, selama tetap ramah dan tidak melanggar batasan.',
+    'Step Goal hanya panduan, bukan aturan kaku.',
+    'Jika pengguna diam, ulangi pertanyaan dengan versi lebih mudah.',
+    'Jika pengguna keluar konteks, arahkan kembali dengan kalimat ramah.',
   ],
   technical_requirements: [
     'Di akhir setiap balasan, keluarkan satu baris META JSON dalam tag <META>...</META> dengan format:',
@@ -156,9 +134,8 @@ export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
 
 @Injectable()
 export class LocalBuddyConversationService extends BaseConversationService {
-  constructor(protected readonly aiService: GenericAIService) {
+  constructor(protected readonly aiService: OpenAIService) {
     super(aiService);
-    // Initialize with local buddy specific configuration
     this.initializeConversation(
       LOCAL_BUDDY_STEPS,
       LOCAL_BUDDY_CONTEXT,
