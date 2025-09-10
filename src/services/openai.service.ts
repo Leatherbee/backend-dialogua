@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 
 @Injectable()
-export class GenericAIService {
+export class OpenAIService {
   private client: OpenAI;
 
   constructor() {

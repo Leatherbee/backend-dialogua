@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GenericAIService } from './generic-ai.service';
+import { OpenAIService } from './openai.service';
 import {
   ConversationStep,
   ScenarioContext,
@@ -14,7 +14,7 @@ export class BaseConversationService {
   protected scenarioContext: ScenarioContext | null = null;
   protected promptBuilder: SystemPromptBuilder | null = null;
 
-  constructor(protected readonly aiService: GenericAIService) {}
+  constructor(protected readonly aiService: OpenAIService) {}
 
   initializeConversation(
     steps: ConversationStep[],
@@ -102,10 +102,8 @@ assistant: ${aiResponse}`;
       systemPrompt,
     );
 
-    // Update the recent dialog with the conversation
     this.updateRecentDialog(currentStep.step_id, userInput, aiResponse);
 
-    // Add to conversation history
     this.conversationHistory.push(`user: ${userInput}`);
     this.conversationHistory.push(`assistant: ${aiResponse}`);
 

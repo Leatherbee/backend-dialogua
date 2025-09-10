@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './services/app.service';
-import { GenericAIService } from './services/generic-ai.service';
-import { LocalBuddyConversationService } from './services/local-buddy-conversation.service';
-import { ClassroomConversationService } from './services/classroom-conversation.service';
+import { OpenAIService } from './services/openai.service';
+import { LocalBuddyConversationService } from './services/role-play/local-buddy-conversation.service';
+import { ClassroomConversationService } from './services/role-play/classroom-conversation.service';
 import { ConversationServiceFactory } from './services/conversation-service.factory';
 
 @Module({
@@ -11,7 +11,7 @@ import { ConversationServiceFactory } from './services/conversation-service.fact
   controllers: [AppController],
   providers: [
     AppService,
-    GenericAIService,
+    OpenAIService,
     LocalBuddyConversationService,
     ClassroomConversationService,
     ConversationServiceFactory,
