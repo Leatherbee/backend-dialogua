@@ -43,7 +43,6 @@ export class OpenAIService {
   }
 }
 
-// helper
 function stripCodeFences(s: string) {
   return s
     .trim()

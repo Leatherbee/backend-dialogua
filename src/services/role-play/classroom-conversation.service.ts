@@ -7,7 +7,6 @@ import {
   SystemPromptBuilder,
 } from '../../interfaces/conversation.interface';
 
-// Classroom scenario prompt builder
 export class ClassroomPromptBuilder implements SystemPromptBuilder {
   buildPrompt(
     stepContext: ConversationStep,
@@ -43,7 +42,6 @@ export class ClassroomPromptBuilder implements SystemPromptBuilder {
   }
 }
 
-// Classroom scenario conversation steps
 export const CLASSROOM_STEPS: ConversationStep[] = [
   {
     step_id: 'step1',
@@ -104,7 +102,6 @@ export const CLASSROOM_CONTEXT: ScenarioContext = {
 export class ClassroomConversationService extends BaseConversationService {
   constructor(protected readonly aiService: OpenAIService) {
     super(aiService);
-    // Initialize with classroom specific configuration
     this.initializeConversation(
       CLASSROOM_STEPS,
       CLASSROOM_CONTEXT,

@@ -16,7 +16,7 @@ async function createApp(): Promise<express.Application> {
     AppModule,
     new ExpressAdapter(expressApp),
     {
-      logger: ['error', 'warn'], // Reduce logging for serverless
+      logger: ['error', 'warn'], 
     },
   );
 
@@ -25,7 +25,6 @@ async function createApp(): Promise<express.Application> {
     credentials: true,
   });
 
-  // Important: Initialize the app but don't call listen()
   await app.init();
 
   return expressApp;

@@ -23,7 +23,6 @@ export interface SystemPromptBuilder {
   ): string;
 }
 
-// Define the structure of the AI response
 export interface AIResponse {
   ai_response: string;
   meta: {

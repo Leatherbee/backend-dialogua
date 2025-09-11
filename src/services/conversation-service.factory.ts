@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { BaseConversationService } from './base-conversation.service';
-import { OpenAIService } from './openai.service';
 import { LocalBuddyConversationService } from './role-play/local-buddy-conversation.service';
 import { ClassroomConversationService } from './role-play/classroom-conversation.service';
 
@@ -12,7 +11,6 @@ export type ConversationScenario =
 @Injectable()
 export class ConversationServiceFactory {
   constructor(
-    private readonly genericAIService: OpenAIService,
     private readonly localBuddyService: LocalBuddyConversationService,
     private readonly classroomService: ClassroomConversationService,
   ) {}

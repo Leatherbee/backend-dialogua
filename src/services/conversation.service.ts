@@ -14,7 +14,6 @@ export class ConversationService {
   private currentStepIndex = 0;
   private conversationHistory: string[] = [];
 
-  // Convo steps
   private readonly conversationSteps: ConversationStep[] = [
     {
       step_id: 'step1',
