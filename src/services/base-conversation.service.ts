@@ -4,6 +4,7 @@ import {
   ConversationStep,
   ScenarioContext,
   SystemPromptBuilder,
+  AIResponse,
 } from '../interfaces/conversation.interface';
 
 @Injectable()
@@ -78,7 +79,7 @@ assistant: ${aiResponse}`;
     });
   }
 
-  async processUserInput(userInput: string): Promise<string> {
+  async processUserInput(userInput: string): Promise<AIResponse> {
     if (!this.scenarioContext || !this.promptBuilder) {
       throw new Error(
         'Conversation not initialized. Call initializeConversation first.',
@@ -90,22 +91,24 @@ assistant: ${aiResponse}`;
       throw new Error('No conversation steps defined.');
     }
 
-    // Build the system prompt using the provided prompt builder
     const systemPrompt = this.promptBuilder.buildPrompt(
       currentStep,
       this.scenarioContext,
     );
 
-    // Generate AI response
-    const aiResponse = await this.aiService.generateText(
+    const aiResponse: AIResponse = await this.aiService.generateJson(
       userInput,
       systemPrompt,
     );
 
-    this.updateRecentDialog(currentStep.step_id, userInput, aiResponse);
+    this.updateRecentDialog(
+      currentStep.step_id,
+      userInput,
+      aiResponse.ai_response,
+    );
 
     this.conversationHistory.push(`user: ${userInput}`);
-    this.conversationHistory.push(`assistant: ${aiResponse}`);
+    this.conversationHistory.push(`assistant: ${aiResponse.ai_response}`);
 
     return aiResponse;
   }
