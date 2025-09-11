@@ -22,3 +22,16 @@ export interface SystemPromptBuilder {
     scenarioContext: ScenarioContext,
   ): string;
 }
+
+export interface AIResponse {
+  ai_response: string;
+  meta: {
+    step_id: string;
+    expected_vocab_matched: string[];
+    hints_used: boolean;
+    expressions: {
+      sentence: number;
+      label: string;
+    }[];
+  };
+}
