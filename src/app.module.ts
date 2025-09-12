@@ -1,20 +1,25 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './services/app.service';
-import { OpenAIService } from './services/openai.service';
-import { LocalBuddyConversationService } from './services/role-play/local-buddy-conversation.service';
-import { ClassroomConversationService } from './services/role-play/classroom-conversation.service';
-import { ConversationServiceFactory } from './services/conversation-service.factory';
+import { AppConfigModule } from './common/config/config.module';
+import { DatabaseModule } from './common/database/database.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { UsersModule } from './modules/users/users.module';
+import { SharedModule } from './shared/shared.module';
+import { CommonModule } from './common/common.module';
+import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    OpenAIService,
-    LocalBuddyConversationService,
-    ClassroomConversationService,
-    ConversationServiceFactory,
+  imports: [
+    AppConfigModule,
+    DatabaseModule,
+    ConversationsModule,
+    UsersModule,
+    AuthModule,
+    SharedModule,
+    CommonModule,
+    HealthModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

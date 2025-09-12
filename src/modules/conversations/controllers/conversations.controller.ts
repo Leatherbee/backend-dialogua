@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
-import { AppService } from './services/app.service';
-import { ConversationServiceFactory } from './services/conversation-service.factory';
-import type { ConversationScenario } from './services/conversation-service.factory';
-import { AIResponse } from './interfaces/conversation.interface';
+import { ConversationsAppService } from '../services/app.service';
+import { ConversationServiceFactory } from '../services/conversation-service.factory';
+import type { ConversationScenario } from '../services/conversation-service.factory';
+import { AIResponse } from '../interfaces/conversation.interface';
 
 @Controller()
-export class AppController {
+export class ConversationsController {
   constructor(
-    private readonly appService: AppService,
+    private readonly appService: ConversationsAppService,
     private readonly conversationServiceFactory: ConversationServiceFactory,
   ) {}
 
