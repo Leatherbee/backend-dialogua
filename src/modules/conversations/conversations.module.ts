@@ -1,27 +1,25 @@
 import { Module } from '@nestjs/common';
-import { OpenAIService } from './services/openai.service';
-import { LocalBuddyConversationService } from './services/role-play/local-buddy-conversation.service';
-import { ClassroomConversationService } from './services/role-play/classroom-conversation.service';
-import { ConversationServiceFactory } from './services/conversation-service.factory';
 import { ConversationsController } from './controllers/conversations.controller';
-import { ConversationsAppService } from './services/app.service';
+import { AIController } from './controllers/ai.controller';
+import { ConversationsAppService } from '../../app.service';
+import { SpeechToTextService } from './services/ai/speech-to-text.service';
+import { TextToSpeechService } from './services/ai/text-to-speech.service';
+import { ChatService } from './services/ai/chat.service';
 
 @Module({
   imports: [],
-  controllers: [ConversationsController],
+  controllers: [ConversationsController, AIController],
   providers: [
     ConversationsAppService,
-    OpenAIService,
-    LocalBuddyConversationService,
-    ClassroomConversationService,
-    ConversationServiceFactory,
+    SpeechToTextService,
+    TextToSpeechService,
+    ChatService,
   ],
   exports: [
     ConversationsAppService,
-    OpenAIService,
-    LocalBuddyConversationService,
-    ClassroomConversationService,
-    ConversationServiceFactory,
+    SpeechToTextService,
+    TextToSpeechService,
+    ChatService,
   ],
 })
 export class ConversationsModule {}
