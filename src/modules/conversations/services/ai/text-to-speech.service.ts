@@ -50,8 +50,12 @@ export class TextToSpeechService {
         response_format: response_format as any,
         speed,
       });
-
-      return response.body as unknown as Readable;
+      const webStream = response.body as unknown as ReadableStream<Uint8Array>;
+      // Node 18+ provides Readable.fromWeb
+      const nodeStream = (Readable as any).fromWeb
+        ? (Readable as any).fromWeb(webStream)
+        : Readable.from(webStream as any);
+      return nodeStream as Readable;
     } catch (error) {
       console.error('Error generating speech stream:', error);
       throw new Error(`Failed to generate speech stream: ${error.message}`);

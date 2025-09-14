@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import {
-  ConversationStep,
   ScenarioContext,
   SystemPromptBuilder,
   AIResponse,
@@ -17,8 +16,9 @@ export type ChatScenario =
 // Local Buddy specific data
 export class LocalBuddyPromptBuilder implements SystemPromptBuilder {
   buildPrompt(
-    stepContext: ConversationStep,
+    userInput: string,
     scenarioContext: ScenarioContext,
+    conversationHistory: string[],
   ): string {
     return `
     Anda adalah teman sebaya mahasiswa lokal bernama **Yudha**.
@@ -31,39 +31,27 @@ export class LocalBuddyPromptBuilder implements SystemPromptBuilder {
     - Gunakan kalimat sederhana (SPOK dasar).
     - Jangan menjelaskan grammar.
     - Jangan beralih ke bahasa lain.
-    - Selalu tunggu respons pengguna sebelum lanjut ke topik berikutnya.
     - Output harus dalam JSON dengan 2 key: "ai_response" dan "meta".
 
-    Struktur Percakapan (modular, urut dan bertahap) namun bisa tetap fleksibel:
-    1. Sapaan 
-    2. Perkenalan nama 
-    3. Asal negara 
-    4. Tujuan setelah dari bandara
-    5. Penutup ramah 
+    Struktur Percakapan (fleksibel dan responsif terhadap input pengguna):
+    - Responsif terhadap topik yang dibawa pengguna
+    - Bisa beralih topik dengan alami jika pengguna mengganti topik
+    - Fokus pada interaksi yang nyaman dan tidak kaku
 
     Fallback dan Kontrol Konteks:
-    - Jika pengguna diam → ulangi pertanyaan dengan versi lebih mudah.
-      Contoh: "Nama kamu siapa?" → "Siapa nama kamu?"
+    - Jika pengguna diam → ajak obrol dengan topik ringan.
     - Jika pengguna keluar konteks → arahkan kembali dengan kalimat ramah.
-      Contoh: "Mungkin maksud kamu adalah perkenalan."
     - Jangan ganti nama. Tetap gunakan "Yudha".
-    - Jangan lompat langsung ke semua pertanyaan. Ikuti urutan di atas.
 
     Kriteria Percakapan Sukses:
-    - Sudah terjadi sapaan.
-    - Sudah menyebut nama masing-masing.
-    - Sudah menyebut asal negara.
-    - Ada penutup ramah saling senang bertemu.
-
-    Improvisasi:
-    - Boleh menambahkan topik ringan di luar Step Goal, selama tetap ramah dan tidak melanggar batasan di atas.
-    - Step Goal hanya panduan, bukan aturan kaku.
+    - Interaksi yang nyaman dan alami
+    - Respons yang sesuai dengan input pengguna
+    - Menjaga suasana ramah dan santai
 
     Struktur JSON yang wajib:
     {
       "ai_response": "<teks murni balasan, tanpa emoji, maksimal 2 kalimat>",
       "meta": {
-        "step_id": "${stepContext.step_id}",
         "expected_vocab_matched": [],
         "hints_used": false,
         "expressions": [
@@ -79,7 +67,6 @@ export class LocalBuddyPromptBuilder implements SystemPromptBuilder {
     Contoh keluaran yang benar:
     "Selamat siang! Senang bertemu kamu.",
     "meta": {
-      "step_id": "${stepContext.step_id}",
       "expected_vocab_matched": ["Selamat siang"],
       "hints_used": false,
       "expressions": [
@@ -91,55 +78,71 @@ export class LocalBuddyPromptBuilder implements SystemPromptBuilder {
     [SCENARIO CONTEXT]
     Scenario Code: ${scenarioContext.scenario_code}
     Scenario Title: ${scenarioContext.scenario_title}
-    Current Step: ${stepContext.step_id}
-    Step Goal: ${stepContext.step_goal}
-    Target Vocabulary: ${JSON.stringify(stepContext.target_vocab)}
-    Hints: ${JSON.stringify(stepContext.hints)}
+    Persona: ${scenarioContext.persona}
 
-    [RECENT DIALOG]
-    ${stepContext.recent_dialog ?? ''}
+    [CONVERSATION HISTORY]
+    ${conversationHistory.join('\n')}
 
-    [USER INPUT]`;
+    [USER INPUT]
+    ${userInput}`;
   }
 }
 
-export const LOCAL_BUDDY_STEPS: ConversationStep[] = [
-  {
-    step_id: 'step1',
-    step_goal: 'Menyapa di bandara',
-    target_vocab: ['Halo', 'Selamat pagi', 'Selamat siang', 'Selamat malam'],
-    hints: ["Mulai dengan salam sederhana seperti 'Halo' atau 'Selamat siang'"],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step2',
-    step_goal: 'Tukar nama dengan sopan',
-    target_vocab: ['Nama saya...', 'Siapa nama kamu?'],
-    hints: ["Sebutkan nama kamu dengan 'Nama saya ...'"],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step3',
-    step_goal: 'Menyebutkan asal negara',
-    target_vocab: ['Saya dari...', 'Dari mana asal kamu?'],
-    hints: ["Jawab dengan asal negara, misalnya 'Saya dari Jepang'"],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step4',
-    step_goal: 'Membicarakan tujuan selanjutnya (kampus/asrama)',
-    target_vocab: ['Kamu mau ke asrama?', 'Kita pergi ke kampus'],
-    hints: ['Kaitkan percakapan dengan kampus atau asrama'],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step5',
-    step_goal: 'Mengucapkan terima kasih sebelum mengakhiri percakapan',
-    target_vocab: ['Terima kasih'],
-    hints: ["Tutup percakapan dengan sopan, misalnya 'Terima kasih'"],
-    recent_dialog: '',
-  },
-];
+export class LocalBuddyInitialPromptBuilder implements SystemPromptBuilder {
+  buildPrompt(userInput: string, scenarioContext: ScenarioContext): string {
+    return `
+    Anda adalah teman sebaya mahasiswa lokal bernama **Yudha**.
+    Konteks: menjemput pelajar internasional baru di bandara.
+    Persona: ramah, santai, sopan. Gunakan kalimat pendek dan mudah dipahami level BIPA1.
+    Gunakan Bahasa Indonesia saja, tanpa terjemahan ke bahasa lain kecuali diminta.
+
+    Tugas Anda:
+    Buatlah sambutan awal yang ramah dan hangat untuk memulai percakapan.
+    Sambutan ini akan menjadi pesan pertama yang dilihat pengguna ketika memasuki tampilan role-play.
+
+    Gaya:
+    - Balasan maksimal 2 kalimat.
+    - Gunakan kalimat sederhana (SPOK dasar).
+    - Jangan menjelaskan grammar.
+    - Jangan beralih ke bahasa lain.
+    - Output harus dalam JSON dengan 2 key: "ai_response" dan "meta".
+
+    Struktur JSON yang wajib:
+    {
+      "ai_response": "<teks murni balasan, tanpa emoji, maksimal 2 kalimat>",
+      "meta": {
+        "expected_vocab_matched": [],
+        "hints_used": false,
+        "expressions": [
+          { "sentence": 1, "label": "<lihat daftar label>" }
+        ]
+      }
+    }
+
+    Aturan expressions:
+    - Panjang array = jumlah kalimat dalam balasan (maksimal 2).
+    - label hanya boleh dari: ["smile","warm","neutral","thinking","confused","surprised","encouraging","apologetic"].
+
+    Contoh keluaran yang benar:
+    "Halo! Senang bertemu denganmu di bandara.",
+    "meta": {
+      "expected_vocab_matched": ["Halo"],
+      "hints_used": false,
+      "expressions": [
+        { "sentence": 1, "label": "smile" },
+        { "sentence": 2, "label": "warm" }
+      ]
+    }
+
+    [SCENARIO CONTEXT]
+    Scenario Code: ${scenarioContext.scenario_code}
+    Scenario Title: ${scenarioContext.scenario_title}
+    Persona: ${scenarioContext.persona}
+
+    [USER INPUT]
+    ${userInput}`;
+  }
+}
 
 export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
   scenario_code: 'airport_pickup_bipa1',
@@ -151,17 +154,16 @@ export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
     'Gunakan kalimat sederhana (SPOK dasar).',
     'Jangan menjelaskan grammar.',
     'Jangan beralih ke bahasa lain.',
-    'Selalu tunggu respons pengguna sebelum lanjut ke topik berikutnya.',
-    'Ikuti urutan modular secara luwes; boleh fleksibel tetapi tetap jaga alur.',
+    'Responsif terhadap input pengguna.',
     "Jangan ganti nama. Tetap gunakan 'Yudha'.",
-    'Boleh menambahkan topik ringan di luar Step Goal selama tetap ramah dan tidak melanggar batasan.',
-    'Jika pengguna diam, ulangi pertanyaan dengan versi lebih mudah.',
+    'Boleh menambahkan topik ringan di luar konteks selama tetap ramah.',
+    'Jika pengguna diam, ajak obrol dengan topik ringan.',
     'Jika pengguna keluar konteks, arahkan kembali dengan kalimat ramah.',
     'Jangan sisipkan emoji/ekspresi di teks utama. Ekspresi hanya di meta.expressions.',
   ],
   technical_requirements: [
     'Output WAJIB berupa JSON valid dengan key: "ai_response" (string) dan "meta" (object).',
-    'Skema meta: {"step_id":"{step_id}","expected_vocab_matched":[],"hints_used":false,"expressions":[{"sentence":1,"label":"smile"}]}',
+    'Skema meta: {"expected_vocab_matched":[],"hints_used":false,"expressions":[{"sentence":1,"label":"smile"}]}',
     'Panjang "meta.expressions" harus sama dengan jumlah kalimat pada "ai_response" (maks 2).',
     'Nilai "label" hanya boleh salah satu dari: ["smile","warm","neutral","thinking","confused","surprised","encouraging","apologetic"].',
   ],
@@ -170,8 +172,9 @@ export const LOCAL_BUDDY_CONTEXT: ScenarioContext = {
 // Classroom specific data
 export class ClassroomPromptBuilder implements SystemPromptBuilder {
   buildPrompt(
-    stepContext: ConversationStep,
+    userInput: string,
     scenarioContext: ScenarioContext,
+    conversationHistory: string[],
   ): string {
     return `
     ${scenarioContext.persona}
@@ -188,58 +191,54 @@ export class ClassroomPromptBuilder implements SystemPromptBuilder {
         : ''
     }
 
+    Struktur Percakapan (fleksibel dan responsif terhadap input pengguna):
+    - Responsif terhadap topik yang dibawa pengguna
+    - Bisa beralih topik dengan alami jika pengguna mengganti topik
+    - Fokus pada interaksi yang mendukung pembelajaran
+
     [SCENARIO CONTEXT]
     Scenario Code: ${scenarioContext.scenario_code}
     Scenario Title: ${scenarioContext.scenario_title}
-    Current Step: ${stepContext.step_id}
-    Step Goal: ${stepContext.step_goal}
-    Target Vocabulary: ${JSON.stringify(stepContext.target_vocab)}
-    Hints: ${JSON.stringify(stepContext.hints)}
+    Persona: ${scenarioContext.persona}
 
-    [RECENT DIALOG]
-    ${stepContext.recent_dialog ?? ''}
+    [CONVERSATION HISTORY]
+    ${conversationHistory.join('\n')}
 
-    [USER INPUT]`;
+    [USER INPUT]
+    ${userInput}`;
   }
 }
 
-export const CLASSROOM_STEPS: ConversationStep[] = [
-  {
-    step_id: 'step1',
-    step_goal: 'Menyapa guru dan teman di kelas',
-    target_vocab: ['Selamat pagi', 'Perkenalkan', 'Nama saya'],
-    hints: ['Mulai dengan salam dan perkenalan diri'],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step2',
-    step_goal: 'Bertanya tentang mata pelajaran',
-    target_vocab: ['Apa pelajaran hari ini?', 'Saya ingin belajar...'],
-    hints: ['Tunjukkan minat pada pelajaran'],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step3',
-    step_goal: 'Meminta bantuan saat tidak mengerti',
-    target_vocab: ['Saya tidak mengerti', 'Bisa diulang?', 'Bagaimana cara...'],
-    hints: ['Gunakan frasa sopan saat meminta bantuan'],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step4',
-    step_goal: 'Berpartisipasi dalam diskusi kelas',
-    target_vocab: ['Saya setuju', 'Menurut saya', 'Pendapat yang menarik'],
-    hints: ['Bagikan pendapat dengan sopan'],
-    recent_dialog: '',
-  },
-  {
-    step_id: 'step5',
-    step_goal: 'Mengucapkan salam perpisahan',
-    target_vocab: ['Terima kasih', 'Sampai jumpa', 'Selamat tinggal'],
-    hints: ['Akhiri interaksi dengan sopan'],
-    recent_dialog: '',
-  },
-];
+export class ClassroomInitialPromptBuilder implements SystemPromptBuilder {
+  buildPrompt(userInput: string, scenarioContext: ScenarioContext): string {
+    return `
+    ${scenarioContext.persona}
+    
+    Tujuan: ${scenarioContext.scenario_title}.
+    Gunakan Bahasa Indonesia saja, tanpa terjemahan ke bahasa lain kecuali diminta.
+
+    Tugas Anda:
+    Buatlah sambutan awal yang ramah dan mendukung untuk memulai sesi pembelajaran.
+    Sambutan ini akan menjadi pesan pertama yang dilihat pengguna ketika memasuki tampilan role-play.
+
+    Gaya:
+    ${scenarioContext.style_guidelines.map((guideline) => `- ${guideline}`).join('\n    ')}
+
+    ${
+      scenarioContext.technical_requirements?.length
+        ? `Tambahan teknis:\n    ${scenarioContext.technical_requirements.map((req) => `- ${req}`).join('\n    ')}`
+        : ''
+    }
+
+    [SCENARIO CONTEXT]
+    Scenario Code: ${scenarioContext.scenario_code}
+    Scenario Title: ${scenarioContext.scenario_title}
+    Persona: ${scenarioContext.persona}
+
+    [USER INPUT]
+    ${userInput}`;
+  }
+}
 
 export const CLASSROOM_CONTEXT: ScenarioContext = {
   scenario_code: 'classroom_bipa1',
@@ -251,6 +250,7 @@ export const CLASSROOM_CONTEXT: ScenarioContext = {
     'Berikan pujian untuk memotivasi siswa.',
     'Gunakan teknik pengulangan untuk memperkuat pembelajaran.',
     'Jangan menggunakan bahasa yang terlalu formal.',
+    'Responsif terhadap input pengguna.',
   ],
   technical_requirements: [
     'Di akhir setiap balasan, sertakan terjemahan singkat dalam bahasa Inggris dalam tanda kurung.',
@@ -261,107 +261,116 @@ export const CLASSROOM_CONTEXT: ScenarioContext = {
 @Injectable()
 export class ChatService {
   private client: OpenAI;
-  private currentStepIndex = 0;
-  private conversationHistory: string[] = [];
-  private conversationSteps: ConversationStep[] = [];
-  private scenarioContext: ScenarioContext | null = null;
-  private promptBuilder: SystemPromptBuilder | null = null;
+
+  // Per-session state
+  private sessions = new Map<
+    string,
+    {
+      conversationHistory: string[];
+      scenarioContext: ScenarioContext;
+      promptBuilder: SystemPromptBuilder;
+      initialPromptBuilder: SystemPromptBuilder;
+      scenario: ChatScenario;
+    }
+  >();
 
   constructor() {
     this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  // Initialize conversation with specific scenario
-  initializeConversation(scenario: ChatScenario): void {
-    this.currentStepIndex = 0;
-    this.conversationHistory = [];
-
+  // Create or reinitialize a session with a specific scenario
+  initializeConversation(sessionId: string, scenario: ChatScenario): void {
     switch (scenario) {
       case 'local-buddy':
-      case 'officer':
-        this.conversationSteps = LOCAL_BUDDY_STEPS;
-        this.scenarioContext = LOCAL_BUDDY_CONTEXT;
-        this.promptBuilder = new LocalBuddyPromptBuilder();
+      case 'officer': {
+        this.sessions.set(sessionId, {
+          conversationHistory: [],
+          scenarioContext: LOCAL_BUDDY_CONTEXT,
+          promptBuilder: new LocalBuddyPromptBuilder(),
+          initialPromptBuilder: new LocalBuddyInitialPromptBuilder(),
+          scenario,
+        });
         break;
+      }
       case 'classroom':
-      case 'hotel-receptionist':
-        this.conversationSteps = CLASSROOM_STEPS;
-        this.scenarioContext = CLASSROOM_CONTEXT;
-        this.promptBuilder = new ClassroomPromptBuilder();
+      case 'hotel-receptionist': {
+        this.sessions.set(sessionId, {
+          conversationHistory: [],
+          scenarioContext: CLASSROOM_CONTEXT,
+          promptBuilder: new ClassroomPromptBuilder(),
+          initialPromptBuilder: new ClassroomInitialPromptBuilder(),
+          scenario,
+        });
         break;
-      default:
+      }
+      default: {
         // Default to local buddy
-        this.conversationSteps = LOCAL_BUDDY_STEPS;
-        this.scenarioContext = LOCAL_BUDDY_CONTEXT;
-        this.promptBuilder = new LocalBuddyPromptBuilder();
-    }
-
-    // Reset recent_dialog for all steps
-    this.conversationSteps.forEach((step) => {
-      step.recent_dialog = '';
-    });
-  }
-
-  getCurrentStep(): ConversationStep | null {
-    if (this.conversationSteps.length === 0) return null;
-    return this.conversationSteps[this.currentStepIndex];
-  }
-
-  getNextStep(): ConversationStep | null {
-    if (
-      this.conversationSteps.length === 0 ||
-      this.currentStepIndex >= this.conversationSteps.length - 1
-    ) {
-      return null;
-    }
-    return this.conversationSteps[this.currentStepIndex + 1];
-  }
-
-  updateRecentDialog(
-    stepId: string,
-    userMessage: string,
-    aiResponse: string,
-  ): void {
-    const step = this.conversationSteps.find((s) => s.step_id === stepId);
-    if (step) {
-      step.recent_dialog = `${step.recent_dialog || ''}
-user: ${userMessage}
-assistant: ${aiResponse}`;
+        this.sessions.set(sessionId, {
+          conversationHistory: [],
+          scenarioContext: LOCAL_BUDDY_CONTEXT,
+          promptBuilder: new LocalBuddyPromptBuilder(),
+          initialPromptBuilder: new LocalBuddyInitialPromptBuilder(),
+          scenario: 'local-buddy',
+        });
+      }
     }
   }
 
-  advanceToNextStep(): boolean {
-    if (this.currentStepIndex < this.conversationSteps.length - 1) {
-      this.currentStepIndex++;
-      return true;
+  // Ensure a session exists; if not, initialize it
+  ensureSession(sessionId: string, scenario: ChatScenario): void {
+    if (!this.sessions.has(sessionId)) {
+      this.initializeConversation(sessionId, scenario);
     }
-    return false;
   }
 
-  resetConversation(): void {
-    this.currentStepIndex = 0;
-    this.conversationHistory = [];
-    // Reset recent_dialog for all steps
-    this.conversationSteps.forEach((step) => {
-      step.recent_dialog = '';
-    });
+  // Reset only the conversation history for a given session
+  resetConversation(sessionId: string): void {
+    const s = this.sessions.get(sessionId);
+    if (s) {
+      s.conversationHistory = [];
+    }
   }
 
-  async processUserInput(userInput: string): Promise<AIResponse> {
-    if (!this.scenarioContext || !this.promptBuilder) {
+  async generateInitialMessage(sessionId: string): Promise<AIResponse> {
+    const s = this.sessions.get(sessionId);
+    if (!s) {
       throw new Error(
         'Conversation not initialized. Call initializeConversation first.',
       );
     }
 
-    const currentStep = this.getCurrentStep();
-    if (!currentStep) {
-      throw new Error('No conversation steps defined.');
+    const initialPrompt = s.initialPromptBuilder.buildPrompt(
+      'Sambut pengguna dengan hangat dan ramah untuk memulai percakapan.',
+      s.scenarioContext,
+      [],
+    );
+
+    const aiResponse: AIResponse = await this.generateJson(
+      'Sambut pengguna dengan hangat dan ramah untuk memulai percakapan.',
+      initialPrompt,
+    );
+
+    return aiResponse;
+  }
+
+  async processUserInput(
+    sessionId: string,
+    userInput: string,
+  ): Promise<AIResponse> {
+    const s = this.sessions.get(sessionId);
+    if (!s) {
+      throw new Error(
+        'Conversation not initialized. Call initializeConversation first.',
+      );
     }
 
-    const systemPrompt = this.promptBuilder.buildPrompt(
-      currentStep,
-      this.scenarioContext,
+    // Add user input to conversation history
+    s.conversationHistory.push(`user: ${userInput}`);
+
+    const systemPrompt = s.promptBuilder.buildPrompt(
+      userInput,
+      s.scenarioContext,
+      s.conversationHistory,
     );
 
     const aiResponse: AIResponse = await this.generateJson(
@@ -369,14 +378,8 @@ assistant: ${aiResponse}`;
       systemPrompt,
     );
 
-    this.updateRecentDialog(
-      currentStep.step_id,
-      userInput,
-      aiResponse.ai_response,
-    );
-
-    this.conversationHistory.push(`user: ${userInput}`);
-    this.conversationHistory.push(`assistant: ${aiResponse.ai_response}`);
+    // Add AI response to conversation history
+    s.conversationHistory.push(`assistant: ${aiResponse.ai_response}`);
 
     return aiResponse;
   }
@@ -386,7 +389,7 @@ assistant: ${aiResponse}`;
     systemPrompt: string,
     model = 'gpt-4.1-mini',
     maxTokens = 400,
-    temperature = 0.4,
+    temperature = 0.7,
   ): Promise<AIResponse> {
     const resp = await this.client.chat.completions.create({
       model,
@@ -420,29 +423,6 @@ assistant: ${aiResponse}`;
       .replace(/^```\s*/i, '')
       .replace(/```$/i, '')
       .trim();
-  }
-
-  isConversationComplete(): boolean {
-    return (
-      this.conversationSteps.length > 0 &&
-      this.currentStepIndex >= this.conversationSteps.length - 1
-    );
-  }
-
-  getConversationProgress(): {
-    currentStep: number;
-    totalSteps: number;
-    percentage: number;
-  } {
-    if (this.conversationSteps.length === 0) {
-      return { currentStep: 0, totalSteps: 0, percentage: 0 };
-    }
-
-    const currentStep = this.currentStepIndex + 1;
-    const totalSteps = this.conversationSteps.length;
-    const percentage = Math.round((currentStep / totalSteps) * 100);
-
-    return { currentStep, totalSteps, percentage };
   }
 
   getAvailableScenarios(): ChatScenario[] {
