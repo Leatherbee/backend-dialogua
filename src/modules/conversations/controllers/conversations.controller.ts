@@ -287,4 +287,63 @@ export class ConversationsController {
         .json({ success: false, error: (error as Error).message || 'Error' });
     }
   }
+
+  @Post('chat/audio')
+  async chatWithTtsAudio(
+    @Body('message') message: string,
+    @Body('scenario') scenario: ChatScenario = 'local-buddy',
+    @Body('sessionId') sessionId: string = 'default',
+    @Body('model') model: string = 'gpt-4o-mini-tts',
+    @Body('voice') voice: string = 'sage',
+    @Body('format') format: string = 'mp3',
+    @Body('speed') speed: number = 1.0,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (!message) {
+      throw new BadRequestException('No message provided');
+    }
+
+    // Ensure session is initialized for this scenario
+    this.chatService.ensureSession(sessionId, scenario);
+
+    try {
+      // Get AI text reply
+      const aiResponse: AIResponse = await this.chatService.processUserInput(
+        sessionId,
+        message,
+      );
+
+      // Generate audio buffer from AI reply (non-stream)
+      const audioBuffer = await this.textToSpeechService.generateSpeech(
+        aiResponse.ai_response,
+        model,
+        voice,
+        format,
+        speed,
+      );
+
+      const mimeByFormat: Record<string, string> = {
+        mp3: 'audio/mpeg',
+        wav: 'audio/wav',
+        aac: 'audio/aac',
+        flac: 'audio/flac',
+        ogg: 'audio/ogg',
+        webm: 'audio/webm',
+      };
+      const contentType = mimeByFormat[format] || 'audio/mpeg';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader(
+        'Content-Disposition',
+        `inline; filename="speech.${format}"`,
+      );
+      res.send(audioBuffer);
+    } catch (error) {
+      console.error('chat/audio error:', error);
+      res
+        .status(500)
+        .json({ success: false, error: (error as Error).message || 'Error' });
+    }
+  }
 }

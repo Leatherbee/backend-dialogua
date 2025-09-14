@@ -408,8 +408,34 @@ export class ChatService {
 
     // Parse JSON
     try {
-      const parsedResponse = JSON.parse(content) as AIResponse;
-      return parsedResponse;
+      const raw = JSON.parse(content) as any;
+      // Coerce ai_response to a plain string to avoid non-string objects reaching TTS
+      let aiText: string;
+      const v = raw?.ai_response;
+      if (typeof v === 'string') {
+        aiText = v;
+      } else if (Array.isArray(v)) {
+        aiText = v
+          .filter((x) => typeof x === 'string')
+          .join(' ')
+          .trim();
+      } else if (v && typeof v === 'object' && typeof v.text === 'string') {
+        aiText = v.text;
+      } else {
+        aiText = String(v ?? '');
+      }
+
+      // Basic cleanup: collapse whitespace and strip wrapping quotes/code fences if any slipped through
+      aiText = this.stripCodeFences(aiText).replace(/\s+/g, ' ').trim();
+
+      return {
+        ai_response: aiText,
+        meta: raw?.meta ?? {
+          expected_vocab_matched: [],
+          hints_used: false,
+          expressions: [],
+        },
+      } as AIResponse;
     } catch (e) {
       console.error('Error parsing JSON:', e);
       throw new Error(`LLM returned non-JSON: ${content}`);

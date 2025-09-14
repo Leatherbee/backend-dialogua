@@ -12,8 +12,8 @@ export class TextToSpeechService {
 
   async generateSpeech(
     text: string,
-    model: string = 'tts-1',
-    voice: string = 'alloy',
+    model: string = 'gpt-4o-mini-tts',
+    voice: string = 'sage',
     response_format: string = 'mp3',
     speed: number = 1.0,
   ): Promise<Buffer> {
