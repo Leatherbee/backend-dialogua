@@ -7,6 +7,7 @@ import { SharedModule } from './shared/shared.module';
 import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { LevelsModule } from './modules/levels/levels.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './modules/auth/auth.module';
     SharedModule,
     CommonModule,
     HealthModule,
+    LevelsModule,
   ],
   controllers: [],
   providers: [],
