@@ -11,12 +11,8 @@ export class Level {
     @Column({
         type: 'enum',
         enum: [
-            'Multiple Choice',
-            'Video Comprehension',
-            'Form Filling',
-            'Audio Compeherension',
-            'Matching Item',
-            'Sentence Order',
+            'Quiz',
+            'Roleplay AI'
         ],
     })
     type: string;

@@ -21,12 +21,8 @@ export class CreateLevelsTable1758029957380 implements MigrationInterface {
             BEGIN
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'level_type_enum') THEN
                     CREATE TYPE level_type_enum AS ENUM (
-                        'Multiple Choice',
-                        'Video Comprehension',
-                        'Form Filling',
-                        'Audio Compeherension',
-                        'Matching Item',
-                        'Sentence Order'
+                        'Quiz',
+                        'Roleplay AI'
                     );
                 END IF;
             END

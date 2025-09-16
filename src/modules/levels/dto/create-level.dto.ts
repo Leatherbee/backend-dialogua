@@ -19,7 +19,7 @@ export class CreateLevelDto {
     @ApiProperty({ 
         enum: LevelType,
         description: 'Type of the level',
-        example: LevelType.MULTIPLE_CHOICE
+        example: LevelType.QUIZ
     })
     @IsNotEmpty()
     @IsEnum(LevelType)
