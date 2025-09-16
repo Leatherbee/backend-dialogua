@@ -393,7 +393,7 @@ export class ChatService {
   ): Promise<AIResponse> {
     const resp = await this.client.chat.completions.create({
       model,
-      response_format: { type: 'json_object' }, // JSON mode
+      response_format: { type: 'json_object' },
       temperature,
       max_tokens: maxTokens,
       messages: [
@@ -425,7 +425,6 @@ export class ChatService {
         aiText = String(v ?? '');
       }
 
-      // Basic cleanup: collapse whitespace and strip wrapping quotes/code fences if any slipped through
       aiText = this.stripCodeFences(aiText).replace(/\s+/g, ' ').trim();
 
       return {

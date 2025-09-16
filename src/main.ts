@@ -6,11 +6,21 @@ import {
   NestExpressApplication,
 } from '@nestjs/platform-express';
 import express from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   dotenv.config();
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  const config = new DocumentBuilder()
+    .setTitle('Dialogua Backend API')
+    .setDescription('Documentation for Dialogua Backend API')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
   await app.listen(process.env.PORT ?? 7575);
   console.log(
     `Server listening on http://localhost:${process.env.PORT ?? 7575}`,

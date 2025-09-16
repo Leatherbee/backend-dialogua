@@ -16,6 +16,11 @@ import type { Response } from 'express';
 import type { Multer } from 'multer';
 import type { AIResponse } from '../interfaces/conversation.interface';
 import type { ChatScenario } from '../services/ai/chat.service';
+import { Readable } from 'stream';
+import { pipeline } from 'stream';
+import { promisify } from 'util';
+
+const pump = promisify(pipeline);
 
 @Controller('api/v1')
 export class ConversationsController {
@@ -210,81 +215,173 @@ export class ConversationsController {
     };
   }
 
+  @Post('tts/stream')
+  async textToSpeechStream(
+    @Body('message') message: string,
+    @Res() res: Response,
+  ) {
+    if (!message) {
+      throw new BadRequestException('No message provided');
+    }
+
+    const mimeByFormat: Record<string, string> = {
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      aac: 'audio/aac',
+      flac: 'audio/flac',
+      ogg: 'audio/ogg',
+      webm: 'audio/webm',
+    };
+
+    const format = 'wav';
+    const contentType = mimeByFormat[format] || 'audio/wav';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Disposition', `inline; filename="speech.${format}"`);
+
+    res.flushHeaders();
+
+    try {
+      const aiResponse = await this.chatService.processUserInput(
+        'default',
+        message,
+      );
+      console.log('AI text response:', aiResponse.ai_response);
+
+      let audioStream = await this.textToSpeechService.generateSpeechStream(
+        aiResponse.ai_response,
+        'gpt-4o-mini-tts',
+        'echo',
+        format,
+        1.0,
+      );
+
+      if (!(audioStream instanceof Readable)) {
+        console.warn(
+          'generateSpeechStream did not return a stream, wrapping buffer instead.',
+        );
+        audioStream = Readable.from(audioStream);
+      }
+
+      audioStream.on('data', (chunk) => {
+        console.log(`Sending chunk: ${chunk.length} bytes`);
+      });
+
+      audioStream.on('end', () => {
+        console.log('Streaming complete.');
+        res.end();
+      });
+
+      audioStream.on('error', (err) => {
+        console.error('Audio stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).send('Audio stream failed');
+        } else {
+          res.end();
+        }
+      });
+
+      audioStream.pipe(res);
+
+      res.on('close', () => {
+        console.warn('Client disconnected before stream finished');
+        if (audioStream.destroy) {
+          audioStream.destroy();
+        }
+      });
+    } catch (err) {
+      console.error('AI processing error:', err);
+      if (!res.headersSent) {
+        res.status(500).send('Error generating speech');
+      } else {
+        res.end();
+      }
+    }
+  }
+
   @Post('chat/stream')
   async chatWithTtsStream(
     @Body('message') message: string,
     @Body('scenario') scenario: ChatScenario = 'local-buddy',
-    @Body('sessionId') sessionId: string = 'default',
-    @Body('model') model: string = 'gpt-4o-mini-tts',
-    @Body('voice') voice: string = 'sage',
-    @Body('format') format: string = 'mp3',
-    @Body('speed') speed: number = 1.0,
+    @Body('sessionId') sessionId = 'default',
+    @Body('model') model = 'gpt-4o-mini-tts',
+    @Body('voice') voice = 'echo',
+    @Body('format') format = 'mp3',
+    @Body('speed') speed = 1.0,
     @Res() res: Response,
   ): Promise<void> {
     if (!message) {
       throw new BadRequestException('No message provided');
     }
 
-    // Ensure session is initialized for this scenario
     this.chatService.ensureSession(sessionId, scenario);
 
+    const mimeByFormat: Record<string, string> = {
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      aac: 'audio/aac',
+      flac: 'audio/flac',
+      ogg: 'audio/ogg',
+      webm: 'audio/webm',
+    };
+
+    res.setHeader('Content-Type', mimeByFormat[format] || 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Content-Disposition', `inline; filename="speech.${format}"`);
+    res.setHeader('X-Scenario', scenario);
+
+    res.flushHeaders();
+
     try {
-      // Get AI text reply
-      const aiResponse: AIResponse = await this.chatService.processUserInput(
-        sessionId,
-        message,
-      );
+      const aiPromise = this.chatService.processUserInput(sessionId, message);
 
-      // Generate audio stream from AI reply
-      const audioStream = await this.textToSpeechService.generateSpeechStream(
-        aiResponse.ai_response,
-        model,
-        voice,
-        format,
-        speed,
-      );
+      aiPromise
+        .then(async (aiResponse: AIResponse) => {
+          console.log('AI response ready:', aiResponse.ai_response);
 
-      const mimeByFormat: Record<string, string> = {
-        mp3: 'audio/mpeg',
-        wav: 'audio/wav',
-        aac: 'audio/aac',
-        flac: 'audio/flac',
-        ogg: 'audio/ogg',
-        webm: 'audio/webm',
-      };
-      const contentType = mimeByFormat[format] || 'audio/mpeg';
+          const audioStream =
+            await this.textToSpeechService.generateSpeechStream(
+              aiResponse.ai_response,
+              model,
+              voice,
+              format,
+              speed,
+            );
 
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'no-store');
-      res.setHeader(
-        'Content-Disposition',
-        `inline; filename="speech.${format}"`,
-      );
+          audioStream.on('error', (err) => {
+            console.error('Audio stream error:', err);
+            if (!res.headersSent) {
+              res
+                .status(500)
+                .json({ success: false, error: 'Audio stream failed' });
+            } else {
+              res.end();
+            }
+          });
 
-      // Optionally expose brief metadata via headers
-      res.setHeader('X-Scenario', scenario);
-
-      audioStream.on('error', (err) => {
-        console.error('Audio stream error:', err);
-        if (!res.headersSent) {
-          res
-            .status(500)
-            .json({ success: false, error: 'Audio stream failed' });
-        } else {
-          try {
+          await pump(audioStream, res);
+        })
+        .catch((err) => {
+          console.error('Error processing chat:', err);
+          if (!res.headersSent) {
+            res
+              .status(500)
+              .json({ success: false, error: 'Chat processing failed' });
+          } else {
             res.end();
-          } catch (e) {
-            console.error(e);
           }
-        }
-      });
-
-      audioStream.pipe(res);
-    } catch (error) {
-      console.error('chat/stream error:', error);
-      res
-        .status(500)
-        .json({ success: false, error: (error as Error).message || 'Error' });
+        });
+    } catch (err) {
+      console.error('Fatal chat/stream error:', err);
+      if (!res.headersSent) {
+        res
+          .status(500)
+          .json({ success: false, error: 'Unexpected server error' });
+      } else {
+        res.end();
+      }
     }
   }
 
@@ -303,17 +400,14 @@ export class ConversationsController {
       throw new BadRequestException('No message provided');
     }
 
-    // Ensure session is initialized for this scenario
     this.chatService.ensureSession(sessionId, scenario);
 
     try {
-      // Get AI text reply
       const aiResponse: AIResponse = await this.chatService.processUserInput(
         sessionId,
         message,
       );
 
-      // Generate audio buffer from AI reply (non-stream)
       const audioBuffer = await this.textToSpeechService.generateSpeech(
         aiResponse.ai_response,
         model,

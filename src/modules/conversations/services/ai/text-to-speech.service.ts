@@ -7,13 +7,16 @@ export class TextToSpeechService {
   private client: OpenAI;
 
   constructor() {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      defaultHeaders: { Connection: 'keep-alive' },
+    });
   }
 
   async generateSpeech(
     text: string,
     model: string = 'gpt-4o-mini-tts',
-    voice: string = 'sage',
+    voice: string = 'echo',
     response_format: string = 'mp3',
     speed: number = 1.0,
   ): Promise<Buffer> {
@@ -37,9 +40,9 @@ export class TextToSpeechService {
 
   async generateSpeechStream(
     text: string,
-    model: string = 'tts-1',
-    voice: string = 'alloy',
-    response_format: string = 'mp3',
+    model: string = 'gpt-4o-mini-tts',
+    voice: string = 'echo',
+    response_format: string = 'wav',
     speed: number = 1.0,
   ): Promise<Readable> {
     try {
@@ -50,12 +53,14 @@ export class TextToSpeechService {
         response_format: response_format as any,
         speed,
       });
-      const webStream = response.body as unknown as ReadableStream<Uint8Array>;
-      // Node 18+ provides Readable.fromWeb
-      const nodeStream = (Readable as any).fromWeb
-        ? (Readable as any).fromWeb(webStream)
-        : Readable.from(webStream as any);
-      return nodeStream as Readable;
+      // const webStream = response.body as unknown as ReadableStream<Uint8Array>;
+      // // Node 18+ provides Readable.fromWeb
+      // const nodeStream = (Readable as any).fromWeb
+      //   ? (Readable as any).fromWeb(webStream)
+      //   : Readable.from(webStream as any);
+      // return nodeStream as Readable;
+
+      return (Readable as any).fromWeb(response.body as any);
     } catch (error) {
       console.error('Error generating speech stream:', error);
       throw new Error(`Failed to generate speech stream: ${error.message}`);
