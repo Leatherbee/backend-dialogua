@@ -29,6 +29,10 @@ export class UserRepository {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findOneByAppleId(appleId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { appleId } });
+  }
+
   async update(id: UUID, updateUserDto: any): Promise<User | null> {
     await this.userRepository.update(id, updateUserDto);
     return this.findOneById(id);
