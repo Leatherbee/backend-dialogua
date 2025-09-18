@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LevelsModule } from './modules/levels/levels.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AppService } from './app.service';
     SharedModule,
     CommonModule,
     HealthModule,
+    LevelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

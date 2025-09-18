@@ -6,12 +6,39 @@ import {
   NestExpressApplication,
 } from '@nestjs/platform-express';
 import express from 'express';
+import { join } from 'path';
+import { mkdirSync, existsSync } from 'fs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   dotenv.config();
-  const app = await NestFactory.create(AppModule);
+  
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = join(process.cwd(), 'uploads/levels/banners');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Serve static files from the uploads directory
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads/levels/banners',
+  });
+  
+  // Add a redirect from the old path to the new one for backward compatibility
+  app.use('/uploads/levels/banner', (req, res, next) => {
+    const newPath = req.url.replace(/^\/banner\//, '/banners/');
+    res.redirect(308, newPath);
+  });
+  
   app.enableCors();
+  
+  const port = process.env.PORT ?? 7575;
+  await app.listen(port);
+  
+  console.log(`Server listening on http://localhost:${port}`);
+  console.log(`Serving static files from: ${uploadsDir}`);
   const config = new DocumentBuilder()
     .setTitle('Dialogua Backend API')
     .setDescription('Documentation for Dialogua Backend API')
@@ -33,6 +60,23 @@ export async function bootstrapServer() {
     AppModule,
     new ExpressAdapter(expressApp),
   );
+
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = join(process.cwd(), 'uploads/levels/banners');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // Serve static files from the uploads directory
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads/levels/banners',
+  });
+  
+  // Add a redirect from the old path to the new one for backward compatibility
+  app.use('/uploads/levels/banner', (req, res, next) => {
+    const newPath = req.url.replace(/^\/banner\//, '/banners/');
+    res.redirect(308, newPath);
+  });
 
   app.enableCors();
 
