@@ -13,7 +13,6 @@ import { SpeechToTextService } from '../services/ai/speech-to-text.service';
 import { TextToSpeechService } from '../services/ai/text-to-speech.service';
 import { ChatService } from '../services/ai/chat.service';
 import type { Response } from 'express';
-import type { Multer } from 'multer';
 import type { AIResponse } from '../interfaces/conversation.interface';
 import type { ChatScenario } from '../services/ai/chat.service';
 import { Readable } from 'stream';
@@ -38,7 +37,7 @@ export class ConversationsController {
   @Post('transcribe')
   @UseInterceptors(FileInterceptor('audio'))
   async transcribeAudio(
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Body('details') details?: boolean,
   ): Promise<any> {
     if (!file) {

@@ -29,4 +29,4 @@ import { v4 as uuidv4 } from 'uuid';
   providers: [LevelsService],
   exports: [LevelsService],
 })
-export class LevelsModule { }
+export class LevelsModule {}

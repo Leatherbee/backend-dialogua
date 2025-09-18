@@ -3,16 +3,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CreateLevelDto } from './create-level.dto';
 
 export class UpdateLevelDto extends PartialType(CreateLevelDto) {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Banner image filename',
-    required: false
+    required: false,
   })
   banner?: string | null;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Flag to remove the banner',
     required: false,
-    default: false
+    default: false,
   })
   removeBanner?: boolean;
 }

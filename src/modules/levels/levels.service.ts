@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Level } from './entities/level.entity';
@@ -37,20 +41,20 @@ export class LevelsService {
   }
 
   async findOne(id: string): Promise<Level> {
-    const level = await this.levelRepository.findOne({ 
-      where: { id, deletedAt: null } 
+    const level = await this.levelRepository.findOne({
+      where: { id, deletedAt: null },
     });
-    
+
     if (!level) {
       throw new NotFoundException(`Level with ID ${id} not found`);
     }
-    
+
     return level;
   }
 
   async update(id: string, updateLevelDto: UpdateLevelDto): Promise<Level> {
     const level = await this.findOne(id);
-    
+
     // Handle banner removal
     if (updateLevelDto.removeBanner && level.banner) {
       await this.deleteBannerFile(level.banner);
@@ -69,24 +73,24 @@ export class LevelsService {
     // Update other fields
     if (updateLevelDto.level !== undefined) level.level = updateLevelDto.level;
     if (updateLevelDto.type) level.type = updateLevelDto.type;
-    
+
     return await this.levelRepository.save(level);
   }
 
   async remove(id: string): Promise<void> {
     const level = await this.findOne(id);
-    
+
     // Delete the banner file if it exists
     if (level.banner) {
       await this.deleteBannerFile(level.banner);
     }
-    
+
     await this.levelRepository.softDelete(id);
   }
 
   private async deleteBannerFile(filename: string): Promise<void> {
     const filePath = join(this.uploadPath, filename);
-    
+
     if (existsSync(filePath)) {
       try {
         await unlinkAsync(filePath);
