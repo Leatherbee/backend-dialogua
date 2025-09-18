@@ -2,8 +2,8 @@ export interface AuthResponse {
   access_token: string;
   user: {
     id: number;
-    name: string;
-    username: string;
+    first_name: string | null;
+    last_name: string | null;
     email: string;
   };
 }

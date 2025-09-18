@@ -11,17 +11,20 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  name: string;
+  @Column({ name: 'first_name', type: 'varchar', length: 255, nullable: true })
+  first_name: string | null;
 
-  @Column({ type: 'varchar', length: 50, unique: true })
-  username: string;
+  @Column({ name: 'last_name', type: 'varchar', length: 255, nullable: true })
+  last_name: string | null;
 
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  appleId: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
