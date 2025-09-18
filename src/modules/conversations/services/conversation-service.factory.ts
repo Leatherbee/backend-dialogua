@@ -1,34 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { BaseConversationService } from './base-conversation.service';
-import { LocalBuddyConversationService } from './role-play/local-buddy-conversation.service';
-import { ClassroomConversationService } from './role-play/classroom-conversation.service';
+import { ChatService } from './ai/chat.service';
+import type { ChatScenario } from './ai/chat.service';
 
-export type ConversationScenario =
-  | 'local-buddy'
-  | 'officer'
-  | 'hotel-receptionist';
+export type ConversationScenario = ChatScenario;
 
 @Injectable()
 export class ConversationServiceFactory {
-  constructor(
-    private readonly localBuddyService: LocalBuddyConversationService,
-    private readonly classroomService: ClassroomConversationService,
-  ) {}
+  constructor(private readonly chatService: ChatService) {}
 
-  getService(scenario: ConversationScenario): BaseConversationService {
-    switch (scenario) {
-      case 'local-buddy':
-        return this.localBuddyService;
-      case 'officer':
-        return this.localBuddyService;
-      case 'hotel-receptionist':
-        return this.classroomService;
-      default:
-        return this.localBuddyService;
-    }
+  getService(
+    scenario: ConversationScenario,
+    sessionId: string = 'default',
+  ): ChatService {
+    // Initialize the chat service with the specified scenario for this session
+    this.chatService.initializeConversation(sessionId, scenario);
+    return this.chatService;
   }
 
   getAvailableScenarios(): ConversationScenario[] {
-    return ['local-buddy', 'officer', 'hotel-receptionist'];
+    return this.chatService.getAvailableScenarios();
   }
 }

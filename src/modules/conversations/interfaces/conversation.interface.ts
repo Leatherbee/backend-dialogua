@@ -18,15 +18,15 @@ export interface ScenarioContext {
 
 export interface SystemPromptBuilder {
   buildPrompt(
-    stepContext: ConversationStep,
+    userInput: string,
     scenarioContext: ScenarioContext,
+    conversationHistory: string[],
   ): string;
 }
 
 export interface AIResponse {
   ai_response: string;
   meta: {
-    step_id: string;
     expected_vocab_matched: string[];
     hints_used: boolean;
     expressions: {

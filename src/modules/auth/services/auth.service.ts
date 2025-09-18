@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { UpdateUserDto } from '../../users/dto/update-user.dto';
 import { AppleTokenService } from './apple-token.service';
+import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 
 @Injectable()
 export class AuthService {
@@ -18,10 +19,10 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly appleTokenService: AppleTokenService,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
-    // Check if user already exists
     const existingUser = await this.userService.findByEmail(registerDto.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
@@ -37,19 +38,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    // Generate JWT token
-    const payload: JwtPayload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
-
-    return {
-      access_token: accessToken,
-      user: {
-        id: user.id,
-        first_name: user.first_name ?? null,
-        last_name: user.last_name ?? null,
-        email: user.email,
-      },
-    };
+    return this.generateAuthResponse(user);
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
@@ -59,18 +48,22 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload: JwtPayload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
+    return this.generateAuthResponse(user);
+  }
 
-    return {
-      access_token: accessToken,
-      user: {
-        id: user.id,
-        first_name: user.first_name ?? null,
-        last_name: user.last_name ?? null,
-        email: user.email,
-      },
-    };
+  async refresh(refreshToken: string): Promise<AuthResponse> {
+    const token =
+      await this.refreshTokenRepository.findRefreshToken(refreshToken);
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (token.expiresAt < new Date()) {
+      throw new UnauthorizedException('Expired refresh token');
+    }
+
+    return this.generateAuthResponse(token.user);
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -144,8 +137,15 @@ export class AuthService {
     const payload: JwtPayload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
 
+    const refreshTokenEntity =
+      await this.refreshTokenRepository.createRefreshToken(
+        user,
+        365 * 24 * 60 * 60 * 1000, // 365 days in milliseconds
+      );
+
     return {
       access_token: accessToken,
+      refresh_token: refreshTokenEntity.token,
       user: {
         id: user.id,
         first_name: user.first_name ?? null,
@@ -193,8 +193,36 @@ export class AuthService {
     const payload: JwtPayload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
 
+    const refreshTokenEntity =
+      await this.refreshTokenRepository.createRefreshToken(
+        user,
+        365 * 24 * 60 * 60 * 1000, // 365 days in milliseconds
+      );
+
     return {
       access_token: accessToken,
+      refresh_token: refreshTokenEntity.token,
+      user: {
+        id: user.id,
+        first_name: user.first_name ?? null,
+        last_name: user.last_name ?? null,
+        email: user.email,
+      },
+    };
+
+  private async generateAuthResponse(user: User): Promise<AuthResponse> {
+    const payload: JwtPayload = { email: user.email, sub: user.id };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+    const refreshTokenEntity =
+      await this.refreshTokenRepository.createRefreshToken(
+        user,
+        365 * 24 * 60 * 60 * 1000, // 365 days in milliseconds
+      );
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshTokenEntity.token,
       user: {
         id: user.id,
         first_name: user.first_name ?? null,

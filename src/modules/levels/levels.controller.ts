@@ -1,17 +1,22 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseInterceptors, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
   UploadedFile,
-  BadRequestException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { LevelsService } from './levels.service';
 import { CreateLevelDto } from './dto/create-level.dto';
 import { UpdateLevelDto } from './dto/update-level.dto';
@@ -26,7 +31,11 @@ export class LevelsController {
   @UseInterceptors(FileInterceptor('banner'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new level' })
-  @ApiResponse({ status: 201, description: 'The level has been successfully created.', type: Level })
+  @ApiResponse({
+    status: 201,
+    description: 'The level has been successfully created.',
+    type: Level,
+  })
   @ApiBody({
     description: 'Create a new level with an optional banner image',
     type: CreateLevelDto,
@@ -36,8 +45,6 @@ export class LevelsController {
     @Body() createLevelDto: CreateLevelDto,
   ) {
     if (file) {
-      // The file will be automatically saved by the Multer interceptor
-      // We just need to store the filename in the DTO
       createLevelDto.banner = file.filename;
     }
     return this.levelsService.create(createLevelDto);
@@ -45,7 +52,11 @@ export class LevelsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all levels' })
-  @ApiResponse({ status: 200, description: 'Return all levels.', type: [Level] })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all levels.',
+    type: [Level],
+  })
   findAll() {
     return this.levelsService.findAll();
   }
@@ -62,7 +73,11 @@ export class LevelsController {
   @UseInterceptors(FileInterceptor('banner'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update a level' })
-  @ApiResponse({ status: 200, description: 'The level has been successfully updated.', type: Level })
+  @ApiResponse({
+    status: 200,
+    description: 'The level has been successfully updated.',
+    type: Level,
+  })
   @ApiResponse({ status: 404, description: 'Level not found.' })
   @ApiBody({
     description: 'Update a level with an optional banner image',
@@ -74,7 +89,6 @@ export class LevelsController {
     @Body() updateLevelDto: UpdateLevelDto,
   ) {
     if (file) {
-      // The file will be automatically saved by the Multer interceptor
       updateLevelDto.banner = file.filename;
     } else if (updateLevelDto.removeBanner) {
       updateLevelDto.banner = null;
@@ -84,7 +98,10 @@ export class LevelsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a level' })
-  @ApiResponse({ status: 200, description: 'The level has been successfully deleted.' })
+  @ApiResponse({
+    status: 200,
+    description: 'The level has been successfully deleted.',
+  })
   @ApiResponse({ status: 404, description: 'Level not found.' })
   remove(@Param('id') id: string) {
     return this.levelsService.remove(id);
