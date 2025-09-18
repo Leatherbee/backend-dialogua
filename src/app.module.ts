@@ -7,6 +7,8 @@ import { SharedModule } from './shared/shared.module';
 import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { LevelsModule } from './modules/levels/levels.module';
 
 @Module({
@@ -21,7 +23,7 @@ import { LevelsModule } from './modules/levels/levels.module';
     HealthModule,
     LevelsModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
