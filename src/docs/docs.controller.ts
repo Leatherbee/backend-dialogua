@@ -2,9 +2,11 @@ import { Controller, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Public } from '../modules/auth/decorators/public.decorator';
 
 @Controller('docs')
 export class DocsController {
+  @Public()
   @Get()
   async getDocs(@Res() res: Response) {
     try {

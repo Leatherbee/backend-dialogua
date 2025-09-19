@@ -42,6 +42,6 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
     AppleTokenService,
     RefreshTokenRepository,
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -9,11 +9,13 @@ import {
 import { AuthService } from '../services/auth.service';
 import { AuthResponse } from '../interfaces/auth-response.interface';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('api/v1/auth')
 export class RefreshTokenController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
   async refresh(

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppConfigModule } from './common/config/config.module';
 import { DatabaseModule } from './common/database/database.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
@@ -26,6 +27,7 @@ import { MatchingQuestionModule } from './modules/matching-question/matching-que
 import { QuizModule } from './modules/quiz/quiz.module';
 import { QuizOptionModule } from './modules/quiz-option/quiz-option.module';
 import { DocsModule } from './docs/docs.module';
+import { AuthGuard } from './modules/auth/guards/auth.guard';
 
 @Module({
   imports: [
@@ -56,6 +58,12 @@ import { DocsModule } from './docs/docs.module';
     DocsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}
