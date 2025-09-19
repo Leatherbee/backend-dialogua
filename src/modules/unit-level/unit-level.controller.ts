@@ -157,9 +157,9 @@ export class UnitLevelController {
   @Public()
   @Get()
   @ApiOperation({
-    summary: 'Get all unit levels or filter by unit',
+    summary: 'Get all unit levels with comprehensive data or filter by unit',
     description:
-      'Retrieves all unit levels ordered by position, or filters by unit ID if provided',
+      'Retrieves all unit levels with related units, content items, quizzes, roleplays, and associated data ordered by position. Can be filtered by unit ID if provided.',
   })
   @ApiQuery({
     name: 'unitId',
@@ -170,7 +170,8 @@ export class UnitLevelController {
   })
   @ApiResponse({
     status: 200,
-    description: 'List of unit levels successfully retrieved',
+    description:
+      'List of unit levels with comprehensive data successfully retrieved',
     schema: {
       type: 'array',
       items: {
@@ -197,6 +198,101 @@ export class UnitLevelController {
                 type: 'string',
                 example: 'Learn vocabulary about family',
               },
+              program: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer', example: 1 },
+                  title: {
+                    type: 'string',
+                    example: 'English Learning Program',
+                  },
+                  description: {
+                    type: 'string',
+                    example: 'Comprehensive English course',
+                  },
+                },
+              },
+            },
+          },
+          contentItems: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer', example: 1 },
+                content_type: { type: 'string', example: 'quiz' },
+                title: { type: 'string', example: 'Family Vocabulary Quiz' },
+                description: {
+                  type: 'string',
+                  example: 'Test your family vocabulary knowledge',
+                },
+                position: { type: 'integer', example: 1 },
+                mediaAsset: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'integer', example: 1 },
+                    file_name: { type: 'string', example: 'family_image.jpg' },
+                    file_type: { type: 'string', example: 'image' },
+                    file_url: {
+                      type: 'string',
+                      example: '/assets/family_image.jpg',
+                    },
+                  },
+                  nullable: true,
+                },
+                quiz: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'integer', example: 1 },
+                    question: {
+                      type: 'string',
+                      example: 'What is the word for mother in English?',
+                    },
+                    question_type: {
+                      type: 'string',
+                      example: 'multiple_choice',
+                    },
+                    options: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'integer', example: 1 },
+                          option_text: { type: 'string', example: 'Mother' },
+                          is_correct: { type: 'boolean', example: true },
+                        },
+                      },
+                    },
+                  },
+                  nullable: true,
+                },
+                roleplay: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'integer', example: 1 },
+                    scenario: {
+                      type: 'string',
+                      example: 'Family dinner conversation',
+                    },
+                    turns: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'integer', example: 1 },
+                          turn_order: { type: 'integer', example: 1 },
+                          speaker: { type: 'string', example: 'user' },
+                          text: {
+                            type: 'string',
+                            example: 'Hello, how was your day?',
+                          },
+                        },
+                      },
+                    },
+                  },
+                  nullable: true,
+                },
+              },
             },
           },
         },
@@ -213,9 +309,13 @@ export class UnitLevelController {
       },
     },
   })
-  findAll(@Query('unitId', ParseIntPipe) unitId?: number) {
+  findAll(@Query('unitId') unitId?: string) {
     if (unitId) {
-      return this.unitLevelService.findByUnit(unitId);
+      const parsedUnitId = parseInt(unitId, 10);
+      if (isNaN(parsedUnitId)) {
+        throw new Error('Invalid unitId parameter');
+      }
+      return this.unitLevelService.findByUnit(parsedUnitId);
     }
     return this.unitLevelService.findAll();
   }

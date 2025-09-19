@@ -252,7 +252,7 @@ export class FormQuestionController {
   })
   findAll(@Query('contentItemId') contentItemId?: string) {
     if (contentItemId) {
-      return this.formQuestionService.findByContentItem(+contentItemId);
+      return this.formQuestionService.findByLevel(contentItemId);
     }
     return this.formQuestionService.findAll();
   }

@@ -1,35 +1,75 @@
 import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
+import { Unit } from '../../unit/entities/unit.entity';
+import { ContentType } from '../../../common/enums';
+import { Quiz } from '../../quiz/entities/quiz.entity';
+import { Roleplay } from '../../roleplay/entities/roleplay.entity';
 
-@Entity()
+@Entity('levels')
 export class Level {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', default: 1 })
   level: number;
+
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @Column({ type: 'int', default: 0 })
+  position: number;
 
   @Column({
     type: 'enum',
-    enum: ['Quiz', 'Roleplay AI'],
+    enum: ContentType,
+    nullable: false,
   })
-  type: string;
+  content_type: ContentType;
 
-  @Column({ type: 'varchar', nullable: true })
-  banner: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  title: string;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @Column({ type: 'text', nullable: true })
+  content: string;
+
+  @Column({ type: 'text', nullable: true })
+  objective: string;
+
+  @Column({ type: 'int' })
+  unit_id: number;
+
+  @Column({ type: 'jsonb', default: () => "'{}'" })
+  metadata: Record<string, any>;
+
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamp', name: 'deleted_at', nullable: true })
-  deletedAt?: Date;
+  @DeleteDateColumn()
+  deletedAt: Date;
+
+  // Relations
+  @ManyToOne(() => Unit)
+  @JoinColumn({ name: 'unit_id' })
+  unit: Unit;
+
+  @OneToMany(() => Quiz, (quiz) => quiz.level)
+  quizzes: Quiz[];
+
+  @OneToMany(() => Roleplay, (roleplay) => roleplay.level)
+  roleplays: Roleplay[];
 }

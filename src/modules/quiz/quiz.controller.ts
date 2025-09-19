@@ -115,11 +115,7 @@ export class QuizController {
   })
   findAll(@Query('contentItemId') contentItemId?: string) {
     if (contentItemId) {
-      const parsedId = parseInt(contentItemId, 10);
-      if (isNaN(parsedId)) {
-        throw new Error('Invalid contentItemId format');
-      }
-      return this.quizService.findByContentItem(parsedId);
+      return this.quizService.findByLevel(contentItemId);
     }
     return this.quizService.findAll();
   }

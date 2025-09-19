@@ -22,21 +22,21 @@ export class FormQuestionService {
 
   async findAll(): Promise<FormQuestion[]> {
     return await this.formQuestionRepository.find({
-      relations: ['contentItem', 'fields'],
+      relations: ['fields'],
     });
   }
 
-  async findByContentItem(contentItemId: number): Promise<FormQuestion[]> {
+  async findByLevel(levelId: string): Promise<FormQuestion[]> {
     return await this.formQuestionRepository.find({
-      where: { content_item_id: contentItemId },
-      relations: ['contentItem', 'fields'],
+      where: { level_id: levelId },
+      relations: ['fields'],
     });
   }
 
   async findOne(id: number): Promise<FormQuestion> {
     const formQuestion = await this.formQuestionRepository.findOne({
       where: { id },
-      relations: ['contentItem', 'fields'],
+      relations: ['fields'],
     });
 
     if (!formQuestion) {

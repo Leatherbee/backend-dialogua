@@ -22,21 +22,21 @@ export class MatchingQuestionService {
 
   async findAll(): Promise<MatchingQuestion[]> {
     return await this.matchingQuestionRepository.find({
-      relations: ['contentItem', 'pairs'],
+      relations: ['pairs'],
     });
   }
 
-  async findByContentItem(contentItemId: number): Promise<MatchingQuestion[]> {
+  async findByLevel(levelId: string): Promise<MatchingQuestion[]> {
     return await this.matchingQuestionRepository.find({
-      where: { content_item_id: contentItemId },
-      relations: ['contentItem', 'pairs'],
+      where: { level_id: levelId },
+      relations: ['pairs'],
     });
   }
 
   async findOne(id: number): Promise<MatchingQuestion> {
     const matchingQuestion = await this.matchingQuestionRepository.findOne({
       where: { id },
-      relations: ['contentItem', 'pairs'],
+      relations: ['pairs'],
     });
 
     if (!matchingQuestion) {

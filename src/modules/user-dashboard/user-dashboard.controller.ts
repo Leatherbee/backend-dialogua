@@ -52,9 +52,9 @@ export class UserDashboardController {
               id: { type: 'number', example: 1 },
               code: { type: 'string', example: 'BIPA1' },
               name: {
-                  type: 'string',
-                  example: 'Bahasa Indonesia untuk Penutur Asing Level 1',
-                },
+                type: 'string',
+                example: 'Bahasa Indonesia untuk Penutur Asing Level 1',
+              },
               metadata: { type: 'object' },
               units: {
                 type: 'array',
@@ -72,7 +72,10 @@ export class UserDashboardController {
                         type: 'object',
                         properties: {
                           id: { type: 'number', example: 1 },
-                          name: { type: 'string', example: 'Level 1 - Perkenalan' },
+                          name: {
+                            type: 'string',
+                            example: 'Level 1 - Perkenalan',
+                          },
                           position: { type: 'number', example: 1 },
                           isLocked: { type: 'boolean', example: false },
                           isCompleted: { type: 'boolean', example: true },

@@ -5,11 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
+  ManyToOne,
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { ContentItem } from '../../content-item/entities/content-item.entity';
+import { Level } from '../../levels/entities/level.entity';
 import { QuizOption } from '../../quiz-option/entities/quiz-option.entity';
 
 @Entity('quizzes')
@@ -23,8 +23,8 @@ export class Quiz {
   @Column({ type: 'text', nullable: true })
   explanation: string;
 
-  @Column({ type: 'int' })
-  content_item_id: number;
+  @Column({ type: 'varchar' })
+  level_id: string;
 
   @Column({ type: 'jsonb', default: () => "'{}'" })
   metadata: Record<string, any>;
@@ -39,9 +39,9 @@ export class Quiz {
   deletedAt: Date;
 
   // Relations
-  @OneToOne(() => ContentItem, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'content_item_id' })
-  contentItem: ContentItem;
+  @ManyToOne(() => Level, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'level_id' })
+  level: Level;
 
   @OneToMany(() => QuizOption, (quizOption) => quizOption.quiz)
   options: QuizOption[];

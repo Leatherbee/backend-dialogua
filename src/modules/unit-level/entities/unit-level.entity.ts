@@ -46,6 +46,4 @@ export class UnitLevel {
   @ManyToOne(() => Unit)
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
-
-  // ContentItem relation will be added when ContentItem entity is created
 }

@@ -1,33 +1,50 @@
 import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
   IsString,
+  IsOptional,
+  IsInt,
+  Min,
+  IsObject,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { LevelType } from '../enums/level-type.enum';
 
 export class CreateLevelDto {
-  @ApiProperty({ description: 'The level number', example: 1 })
-  @IsNotEmpty()
-  @IsNumber()
-  level: number;
-
   @ApiProperty({
-    description: 'Banner image filename',
-    required: false,
+    description: 'The name of the level',
+    example: 'Introduction to Basics',
   })
   @IsString()
+  @MaxLength(255)
+  name: string;
+
+  @ApiProperty({ description: 'Description of the level', required: false })
   @IsOptional()
-  banner?: string;
+  @IsString()
+  description?: string;
 
   @ApiProperty({
-    enum: LevelType,
-    description: 'Type of the level',
-    example: LevelType.QUIZ,
+    description: 'Position order of the level',
+    required: false,
+    example: 1,
   })
-  @IsNotEmpty()
-  @IsEnum(LevelType)
-  type: string;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  position?: number;
+
+  @ApiProperty({
+    description: 'Unit ID that this level belongs to',
+    example: 1,
+  })
+  @IsInt()
+  @Min(1)
+  unit_id: number;
+
+  @ApiProperty({
+    description: 'Additional metadata for the level',
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, any>;
 }

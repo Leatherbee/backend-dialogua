@@ -115,10 +115,10 @@ export class UserLevelProgressController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiQuery({
-    name: 'unitLevelId',
+    name: 'levelId',
     required: false,
     type: Number,
-    description: 'Filter progress records by unit level ID',
+    description: 'Filter progress records by level ID',
     example: 1,
   })
   @ApiResponse({
@@ -175,13 +175,12 @@ export class UserLevelProgressController {
   })
   findAll(
     @Query('userId') userId?: string,
-    @Query('unitLevelId', ParseIntPipe) unitLevelId?: number,
+    @Query('levelId', ParseIntPipe) levelId?: number,
   ) {
-    if (userId) {
+    if (userId && levelId) {
+      return this.userLevelProgressService.findByUserAndLevel(userId, levelId);
+    } else if (userId) {
       return this.userLevelProgressService.findByUser(userId);
-    }
-    if (unitLevelId) {
-      return this.userLevelProgressService.findByUnitLevel(unitLevelId);
     }
     return this.userLevelProgressService.findAll();
   }
@@ -264,10 +263,10 @@ export class UserLevelProgressController {
     return this.userLevelProgressService.findOne(id);
   }
 
-  @Get('user/:userId/unit-level/:unitLevelId')
+  @Get('user/:userId/level/:levelId')
   @ApiOperation({
-    summary: 'Get user progress for specific unit level',
-    description: "Retrieves a user's progress record for a specific unit level",
+    summary: 'Get user progress for specific level',
+    description: "Retrieves a user's progress record for a specific level",
   })
   @ApiParam({
     name: 'userId',
@@ -276,9 +275,9 @@ export class UserLevelProgressController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiParam({
-    name: 'unitLevelId',
+    name: 'levelId',
     type: Number,
-    description: 'Unit Level ID',
+    description: 'Level ID',
     example: 1,
   })
   @ApiResponse({
@@ -333,12 +332,9 @@ export class UserLevelProgressController {
   })
   findByUserAndLevel(
     @Param('userId') userId: string,
-    @Param('unitLevelId', ParseIntPipe) unitLevelId: number,
+    @Param('levelId', ParseIntPipe) levelId: number,
   ) {
-    return this.userLevelProgressService.findByUserAndUnitLevel(
-      userId,
-      unitLevelId,
-    );
+    return this.userLevelProgressService.findByUserAndLevel(userId, levelId);
   }
 
   @Post('complete')
@@ -351,14 +347,14 @@ export class UserLevelProgressController {
     description: 'Level completion data',
     schema: {
       type: 'object',
-      required: ['userId', 'unitLevelId'],
+      required: ['userId', 'levelId'],
       properties: {
         userId: {
           type: 'string',
           format: 'uuid',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
-        unitLevelId: { type: 'number', example: 1 },
+        levelId: { type: 'number', example: 1 },
         score: {
           type: 'number',
           minimum: 0,
@@ -372,7 +368,7 @@ export class UserLevelProgressController {
         summary: 'Complete with score',
         value: {
           userId: '123e4567-e89b-12d3-a456-426614174000',
-          unitLevelId: 1,
+          levelId: 1,
           score: 85,
         },
       },
@@ -380,7 +376,7 @@ export class UserLevelProgressController {
         summary: 'Complete without score',
         value: {
           userId: '123e4567-e89b-12d3-a456-426614174000',
-          unitLevelId: 1,
+          levelId: 1,
         },
       },
     },
@@ -419,11 +415,11 @@ export class UserLevelProgressController {
     },
   })
   markCompleted(
-    @Body() body: { userId: string; unitLevelId: number; score?: number },
+    @Body() body: { userId: string; levelId: number; score?: number },
   ) {
     return this.userLevelProgressService.markCompleted(
       body.userId,
-      body.unitLevelId,
+      body.levelId,
       body.score,
     );
   }

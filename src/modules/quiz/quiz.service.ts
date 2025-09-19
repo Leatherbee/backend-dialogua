@@ -29,12 +29,12 @@ export class QuizService {
   }
 
   /**
-   * Find quizzes by content item
+   * Find quizzes by level
    */
-  async findByContentItem(contentItemId: number): Promise<Quiz[]> {
+  async findByLevel(levelId: string): Promise<Quiz[]> {
     return await this.quizRepository.find({
-      where: { content_item_id: contentItemId },
-      relations: ['contentItem', 'options'],
+      where: { level_id: levelId },
+      relations: ['options'],
     });
   }
 
@@ -44,7 +44,7 @@ export class QuizService {
   async findOne(id: number): Promise<Quiz> {
     const quiz = await this.quizRepository.findOne({
       where: { id },
-      relations: ['contentItem', 'options'],
+      relations: ['options'],
     });
 
     if (!quiz) {

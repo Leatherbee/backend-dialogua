@@ -31,7 +31,7 @@ export class UnitService {
     });
   }
 
-  async findOne(id: number): Promise<Unit> {
+  async findOne(id: string): Promise<Unit> {
     const unit = await this.unitRepository.findOne({
       where: { id },
       relations: ['program'],
@@ -44,13 +44,13 @@ export class UnitService {
     return unit;
   }
 
-  async update(id: number, updateUnitDto: UpdateUnitDto): Promise<Unit> {
+  async update(id: string, updateUnitDto: UpdateUnitDto): Promise<Unit> {
     const unit = await this.findOne(id);
     Object.assign(unit, updateUnitDto);
     return await this.unitRepository.save(unit);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.findOne(id);
     await this.unitRepository.softDelete(id);
   }

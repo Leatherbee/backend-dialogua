@@ -272,7 +272,7 @@ export class MatchingQuestionController {
   })
   findAll(@Query('contentItemId') contentItemId?: string) {
     if (contentItemId) {
-      return this.matchingQuestionService.findByContentItem(+contentItemId);
+      return this.matchingQuestionService.findByLevel(contentItemId);
     }
     return this.matchingQuestionService.findAll();
   }

@@ -6,7 +6,7 @@ export class CreateUserLevelProgressDto {
 
   @IsInt()
   @Min(1)
-  unit_level_id: number;
+  levelId: number;
 
   @IsOptional()
   @IsBoolean()
