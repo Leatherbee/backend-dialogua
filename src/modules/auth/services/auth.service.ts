@@ -12,6 +12,7 @@ import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { UpdateUserDto } from '../../users/dto/update-user.dto';
 import { AppleTokenService } from './apple-token.service';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -89,10 +90,10 @@ export class AuthService {
     if (!createUserDto.password) {
       createUserDto.password = uuidv4();
     }
-    
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    
+
     // Create user with hashed password
     return this.userService.create({
       ...createUserDto,
@@ -100,12 +101,12 @@ export class AuthService {
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
+  async update(id: UUID, updateUserDto: UpdateUserDto): Promise<User | null> {
     // If password is being updated, hash it
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
-    
+
     return this.userService.update(id, updateUserDto);
   }
 
@@ -130,7 +131,9 @@ export class AuthService {
       });
     } else if (!user.appleId) {
       // Update existing user with Apple ID if not already set
-      user = await this.userService.update(user.id, { appleId: profile.appleId });
+      user = await this.userService.update(user.id, {
+        appleId: profile.appleId,
+      });
     }
 
     // Generate JWT token
@@ -170,7 +173,9 @@ export class AuthService {
       // 3) Try find by email to link appleId
       user = await this.userService.findByEmail(verified.email);
       if (user && !user.appleId) {
-        user = await this.userService.update(user.id, { appleId: verified.appleUserId });
+        user = await this.userService.update(user.id, {
+          appleId: verified.appleUserId,
+        });
       }
     }
 
@@ -181,7 +186,9 @@ export class AuthService {
       const tempPassword = uuidv4();
 
       user = await this.userService.create({
-        email: email ?? `${base}_${Math.random().toString(36).substring(2, 6)}@example.com`,
+        email:
+          email ??
+          `${base}_${Math.random().toString(36).substring(2, 6)}@example.com`,
         first_name: base,
         last_name: '',
         password: tempPassword,
@@ -209,6 +216,7 @@ export class AuthService {
         email: user.email,
       },
     };
+  }
 
   private async generateAuthResponse(user: User): Promise<AuthResponse> {
     const payload: JwtPayload = { email: user.email, sub: user.id };

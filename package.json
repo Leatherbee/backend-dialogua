@@ -17,7 +17,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migration:run": "npm run build && npx typeorm migration:run -d dist/data-source.js",
+    "migration:revert": "npm run build && npx typeorm migration:revert -d dist/data-source.js",
+    "migration:show": "npm run build && npx typeorm migration:show -d dist/data-source.js",
+    "migration:generate": "npx typeorm migration:generate -d src/data-source.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -30,6 +34,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/typeorm": "^11.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/marked": "^5.0.2",
     "@types/multer": "^2.0.0",
     "@types/passport-apple": "^2.0.3",
     "bcrypt": "^6.0.0",
@@ -40,6 +45,7 @@
     "i": "^0.3.7",
     "jose": "^5.10.0",
     "jsonwebtoken": "^9.0.2",
+    "marked": "^16.3.0",
     "openai": "^5.20.0",
     "passport": "^0.7.0",
     "passport-apple": "^2.0.2",

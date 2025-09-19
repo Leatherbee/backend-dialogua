@@ -5,9 +5,12 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { UserLevelProgress } from '../../user-level-progress/entities/user-level-progress.entity';
+import { RoleplayAttempt } from '../../roleplay-attempt/entities/roleplay-attempt.entity';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: UUID;
@@ -32,4 +35,11 @@ export class User {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  // Relations
+  @OneToMany(() => UserLevelProgress, (progress) => progress.user)
+  userLevelProgress: UserLevelProgress[];
+
+  @OneToMany(() => RoleplayAttempt, (attempt) => attempt.user)
+  roleplayAttempts: RoleplayAttempt[];
 }

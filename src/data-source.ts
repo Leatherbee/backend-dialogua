@@ -6,6 +6,8 @@ config();
 
 const configService = new ConfigService();
 
+const isCompiled = __filename.endsWith('.js');
+
 export default new DataSource({
   type: 'postgres',
   host: configService.get('DB_HOST') || 'localhost',
@@ -13,8 +15,8 @@ export default new DataSource({
   username: configService.get('DB_USERNAME') || 'postgres',
   password: configService.get('DB_PASSWORD') || 'postgres',
   database: configService.get('DB_NAME') || 'dialogua',
-  entities: ['src/**/*.entity{.ts,.js}'],
-  migrations: ['src/migrations/*{.ts,.js}'],
+  entities: isCompiled ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
+  migrations: isCompiled ? ['dist/migrations/*.js'] : ['src/migrations/*.ts'],
   migrationsTableName: 'migrations',
   synchronize: false,
 });
