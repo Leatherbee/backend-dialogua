@@ -21,7 +21,12 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { RoleplayService } from './roleplay.service';
-import { CreateRoleplayDto, UpdateRoleplayDto } from './dto';
+import {
+  CreateRoleplayDto,
+  UpdateRoleplayDto,
+  ProcessSpeechDto,
+  ProcessSpeechResponseDto,
+} from './dto';
 import { Roleplay } from './entities/roleplay.entity';
 
 @ApiTags('Roleplays')
@@ -363,5 +368,101 @@ export class RoleplayController {
   })
   remove(@Param('id') id: string) {
     return this.roleplayService.remove(+id);
+  }
+
+  @Post(':id/process-speech')
+  @ApiOperation({
+    summary: 'Process speech input for roleplay',
+    description:
+      'Processes audio input, converts it to text, generates AI response based on roleplay character, and returns the conversation data',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'The unique identifier of the roleplay scenario',
+    example: '1',
+  })
+  @ApiBody({
+    type: ProcessSpeechDto,
+    description: 'Speech processing data including audio input',
+    examples: {
+      example1: {
+        summary: 'Process audio input',
+        value: {
+          audioData: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10...',
+          roleplayId: 1,
+          language: 'en-US',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Speech successfully processed and response generated',
+    type: ProcessSpeechResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        transcribedText: {
+          type: 'string',
+          example: 'Hello, how are you today?',
+        },
+        aiResponse: {
+          type: 'string',
+          example:
+            'I am doing well, thank you for asking! How can I help you today?',
+        },
+        turnOrder: {
+          type: 'number',
+          example: 5,
+        },
+        metadata: {
+          type: 'object',
+          properties: {
+            confidence: { type: 'number', example: 0.95 },
+            processingTime: { type: 'number', example: 1.2 },
+            language: { type: 'string', example: 'en-US' },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Roleplay scenario not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Roleplay not found' },
+        error: { type: 'string', example: 'Not Found' },
+        statusCode: { type: 'number', example: 404 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data or audio format',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'array', items: { type: 'string' } },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Speech processing failed or internal server error',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        statusCode: { type: 'number', example: 500 },
+      },
+    },
+  })
+  async processSpeech(
+    @Param('id') id: string,
+    @Body() processSpeechDto: ProcessSpeechDto,
+  ): Promise<ProcessSpeechResponseDto> {
+    return this.roleplayService.processSpeech(+id, processSpeechDto);
   }
 }

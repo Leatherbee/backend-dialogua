@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Program } from '../../program/entities/program.entity';
+import { UnitLevel } from '../../unit-level/entities/unit-level.entity';
 
 @Entity('units')
 export class Unit {
@@ -44,5 +46,6 @@ export class Unit {
   @JoinColumn({ name: 'program_id' })
   program: Program;
 
-  // UnitLevel relation will be added later
+  @OneToMany(() => UnitLevel, (unitLevel) => unitLevel.unit)
+  levels: UnitLevel[];
 }

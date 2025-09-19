@@ -26,6 +26,8 @@ import { MatchingPairModule } from './modules/matching-pair/matching-pair.module
 import { MatchingQuestionModule } from './modules/matching-question/matching-question.module';
 import { QuizModule } from './modules/quiz/quiz.module';
 import { QuizOptionModule } from './modules/quiz-option/quiz-option.module';
+import { UserDashboardModule } from './modules/user-dashboard/user-dashboard.module';
+import { LevelContentModule } from './modules/level-content/level-content.module';
 import { DocsModule } from './docs/docs.module';
 import { AuthGuard } from './modules/auth/guards/auth.guard';
 
@@ -55,6 +57,8 @@ import { AuthGuard } from './modules/auth/guards/auth.guard';
     MatchingQuestionModule,
     QuizModule,
     QuizOptionModule,
+    UserDashboardModule,
+    LevelContentModule,
     DocsModule,
   ],
   controllers: [AppController],

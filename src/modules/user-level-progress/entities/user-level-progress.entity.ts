@@ -35,6 +35,9 @@ export class UserLevelProgress {
   @Column({ type: 'timestamp', nullable: true })
   completed_at: Date;
 
+  @Column({ type: 'jsonb', nullable: true })
+  completed_content: any;
+
   @CreateDateColumn()
   createdAt: Date;
 
