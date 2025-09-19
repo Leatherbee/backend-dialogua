@@ -28,15 +28,20 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController, ProfileController, AppleAuthController, RefreshTokenController],
+  controllers: [
+    AuthController,
+    ProfileController,
+    AppleAuthController,
+    RefreshTokenController,
+  ],
   providers: [
-    AuthService, 
-    JwtStrategy, 
-    LocalStrategy, 
+    AuthService,
+    JwtStrategy,
+    LocalStrategy,
     AppleStrategy,
     AppleTokenService,
-    RefreshTokenRepository
+    RefreshTokenRepository,
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

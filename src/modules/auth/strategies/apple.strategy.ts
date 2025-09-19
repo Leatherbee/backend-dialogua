@@ -13,8 +13,10 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
     private readonly jwtService: JwtService,
   ) {
     // Get the private key from environment variable and format it correctly
-    const privateKey = configService.get<string>('APPLE_PRIVATE_KEY')?.replace(/\\n/g, '\n');
-    
+    const privateKey = configService
+      .get<string>('APPLE_PRIVATE_KEY')
+      ?.replace(/\\n/g, '\n');
+
     super({
       clientID: configService.get<string>('APPLE_CLIENT_ID'),
       teamID: configService.get<string>('APPLE_TEAM_ID'),
@@ -36,37 +38,39 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
   ): Promise<any> {
     try {
       const { name, email } = profile;
-      
+
       // First, try to find user by Apple ID
       let user = await this.authService.findByAppleId(profile.id);
-      
+
       // If user not found by Apple ID but email exists, try to find by email
       if (!user && email) {
         user = await this.authService.findByEmail(email);
-        
+
         // If user exists but doesn't have Apple ID, update it
         if (user && !user.appleId) {
-          user = await this.authService.update(user.id, { appleId: profile.id });
+          user = await this.authService.update(user.id, {
+            appleId: profile.id,
+          });
         }
       }
-      
+
       // If user still not found, create a new one
       if (!user) {
         const base = email ? email.split('@')[0] : 'user';
 
         user = await this.authService.create({
           email,
-          first_name: name ? (name.givenName || base) : base,
-          last_name: name ? (name.familyName || '') : '',
+          first_name: name ? name.givenName || base : base,
+          last_name: name ? name.familyName || '' : '',
           password: Math.random().toString(36), // Random password as it's required
           appleId: profile.id,
         });
       }
-      
+
       // Generate JWT token
       const payload = { email: user.email, sub: user.id };
       const access_token = this.jwtService.sign(payload);
-      
+
       return done(null, {
         access_token,
         user: {

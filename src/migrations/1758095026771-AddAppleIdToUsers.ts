@@ -1,11 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddAppleIdToUsers1758095026771 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // Ensure table name matches the entity: TypeORM default for User entity is "user" (quoted) in Postgres
-        // Add column appleId if not exists
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Ensure table name matches the entity: TypeORM default for User entity is "user" (quoted) in Postgres
+    // Add column appleId if not exists
+    await queryRunner.query(`
             DO $$
             BEGIN
                 IF NOT EXISTS (
@@ -19,8 +18,8 @@ export class AddAppleIdToUsers1758095026771 implements MigrationInterface {
             $$;
         `);
 
-        // Create an index on appleId for faster lookups
-        await queryRunner.query(`
+    // Create an index on appleId for faster lookups
+    await queryRunner.query(`
             DO $$
             BEGIN
                 IF NOT EXISTS (
@@ -33,11 +32,11 @@ export class AddAppleIdToUsers1758095026771 implements MigrationInterface {
             END
             $$;
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        // Drop index if exists
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    // Drop index if exists
+    await queryRunner.query(`
             DO $$
             BEGIN
                 IF EXISTS (
@@ -51,8 +50,8 @@ export class AddAppleIdToUsers1758095026771 implements MigrationInterface {
             $$;
         `);
 
-        // Drop column if exists
-        await queryRunner.query(`
+    // Drop column if exists
+    await queryRunner.query(`
             DO $$
             BEGIN
                 IF EXISTS (
@@ -65,6 +64,5 @@ export class AddAppleIdToUsers1758095026771 implements MigrationInterface {
             END
             $$;
         `);
-    }
-
+  }
 }

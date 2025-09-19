@@ -3,8 +3,8 @@ export interface AuthResponse {
   refresh_token: string;
   user: {
     id: string;
-    name: string | null;
-    username: string | null;
+    first_name: string | null;
+    last_name: string | null;
     email: string;
   };
 }

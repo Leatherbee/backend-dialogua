@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -23,7 +28,7 @@ export const multerOptions = {
   fileFilter: imageFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 1
+    files: 1,
   },
 };
 

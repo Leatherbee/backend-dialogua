@@ -9,7 +9,9 @@ export type VerifiedAppleUser = {
 
 @Injectable()
 export class AppleTokenService {
-  private readonly appleKeysURL = new URL('https://appleid.apple.com/auth/keys');
+  private readonly appleKeysURL = new URL(
+    'https://appleid.apple.com/auth/keys',
+  );
 
   constructor(private readonly configService: ConfigService) {}
 
