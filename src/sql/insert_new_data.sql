@@ -56,19 +56,19 @@ unit_levels_insert AS (
     (4, 'Unit 4', 'Level makanan Indonesia dan memesan makanan', 4),
     (5, 'Unit 5', 'Level berbelanja di supermarket dan pasar tradisional', 5)
   ) AS level_data(unit_order, name, description, position) ON u.order_index = level_data.unit_order
-  RETURNING id AS unit_level_id, position
+  RETURNING id AS level_id, position
 ),
 
--- Step 4: Insert Content Items using unit level IDs
+-- Step 4: Insert Content Items using level IDs
 content_items_insert AS (
-  INSERT INTO content_items (content_type, title, description, content, position, unit_level_id, metadata, "createdAt", "updatedAt")
+  INSERT INTO content_items (content_type, title, description, content, position, level_id, metadata, "createdAt", "updatedAt")
   SELECT 
     content_data.content_type::content_items_content_type_enum,
     content_data.title,
     content_data.description,
     content_data.content,
     content_data.position,
-    ul.unit_level_id,
+    ul.level_id,
     content_data.metadata::jsonb,
     NOW(),
     NOW()

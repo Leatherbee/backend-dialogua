@@ -5,11 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
+  ManyToOne,
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { ContentItem } from '../../content-item/entities/content-item.entity';
+import { Level } from '../../levels/entities/level.entity';
 import { RoleplayTurn } from '../../roleplay-turn/entities/roleplay-turn.entity';
 
 @Entity('roleplays')
@@ -29,8 +29,8 @@ export class Roleplay {
   @Column({ type: 'text', nullable: true })
   character_description: string;
 
-  @Column({ type: 'int' })
-  content_item_id: number;
+  @Column({ type: 'varchar' })
+  level_id: string;
 
   @Column({ type: 'jsonb', default: () => "'{}'" })
   metadata: Record<string, any>;
@@ -45,9 +45,9 @@ export class Roleplay {
   deletedAt: Date;
 
   // Relations
-  @OneToOne(() => ContentItem, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'content_item_id' })
-  contentItem: ContentItem;
+  @ManyToOne(() => Level, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'level_id' })
+  level: Level;
 
   @OneToMany(() => RoleplayTurn, (roleplayTurn) => roleplayTurn.roleplay)
   turns: RoleplayTurn[];

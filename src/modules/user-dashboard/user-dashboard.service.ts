@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Program } from '../program/entities/program.entity';
 import { Unit } from '../unit/entities/unit.entity';
-import { UnitLevel } from '../unit-level/entities/unit-level.entity';
+import { Level } from '../levels/entities/level.entity';
 import { UserLevelProgress } from '../user-level-progress/entities/user-level-progress.entity';
-import { ContentItem } from '../content-item/entities/content-item.entity';
 
 @Injectable()
 export class UserDashboardService {
@@ -14,12 +13,10 @@ export class UserDashboardService {
     private readonly programRepository: Repository<Program>,
     @InjectRepository(Unit)
     private readonly unitRepository: Repository<Unit>,
-    @InjectRepository(UnitLevel)
-    private readonly unitLevelRepository: Repository<UnitLevel>,
+    @InjectRepository(Level)
+    private readonly levelRepository: Repository<Level>,
     @InjectRepository(UserLevelProgress)
     private readonly userLevelProgressRepository: Repository<UserLevelProgress>,
-    @InjectRepository(ContentItem)
-    private readonly contentItemRepository: Repository<ContentItem>,
   ) {}
 
   async getUserDashboard(userId: string) {
@@ -44,24 +41,10 @@ export class UserDashboardService {
     // Create a map for quick progress lookup
     const progressMap = new Map();
     userProgress.forEach((progress) => {
-      progressMap.set(progress.unit_level_id, progress);
+      progressMap.set(progress.levelId, progress);
     });
 
-    // Get content counts for each level
-    const contentCounts = await this.contentItemRepository
-      .createQueryBuilder('content')
-      .select('content.unit_level_id', 'levelId')
-      .addSelect('COUNT(*)', 'contentCount')
-      .groupBy('content.unit_level_id')
-      .getRawMany();
-
-    const contentCountMap = new Map();
-    contentCounts.forEach((count) => {
-      contentCountMap.set(
-        parseInt(count.levelId),
-        parseInt(count.contentCount),
-      );
-    });
+    // Since levels now contain content directly, we don't need to count content items
 
     // Calculate overall user statistics
     let totalLevels = 0;
@@ -82,11 +65,10 @@ export class UserDashboardService {
         levels: unit.levels.map((level, index) => {
           totalLevels++;
           const progress = progressMap.get(level.id);
-          const contentCount = contentCountMap.get(level.id) || 0;
-          const completedContent = progress?.completed_content || 0;
-          const levelProgress =
-            contentCount > 0 ? (completedContent / contentCount) * 100 : 0;
           const isCompleted = progress?.is_completed || false;
+
+          // Since each level now contains its own content, progress is binary (0% or 100%)
+          const levelProgress = isCompleted ? 100 : 0;
 
           if (isCompleted) {
             completedLevels++;
@@ -110,11 +92,10 @@ export class UserDashboardService {
             id: level.id,
             name: level.name,
             position: level.position,
+            content_type: level.content_type,
             isLocked,
             isCompleted,
-            progress: Math.round(levelProgress),
-            contentCount,
-            completedContent,
+            progress: levelProgress,
             metadata: level.metadata,
           };
         }),

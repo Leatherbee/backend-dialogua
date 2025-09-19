@@ -30,21 +30,21 @@ export class RoleplayService {
 
   async findAll(): Promise<Roleplay[]> {
     return await this.roleplayRepository.find({
-      relations: ['contentItem', 'turns'],
+      relations: ['turns'],
     });
   }
 
-  async findByContentItem(contentItemId: number): Promise<Roleplay[]> {
+  async findByLevel(levelId: string): Promise<Roleplay[]> {
     return await this.roleplayRepository.find({
-      where: { content_item_id: contentItemId },
-      relations: ['contentItem', 'turns'],
+      where: { level_id: levelId },
+      relations: ['turns'],
     });
   }
 
   async findOne(id: number): Promise<Roleplay> {
     const roleplay = await this.roleplayRepository.findOne({
       where: { id },
-      relations: ['contentItem', 'turns'],
+      relations: ['turns'],
     });
 
     if (!roleplay) {

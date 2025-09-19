@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UnitLevel } from '../unit-level/entities/unit-level.entity';
-import { ContentItem } from '../content-item/entities/content-item.entity';
+import { Level } from '../levels/entities/level.entity';
 import { Quiz } from '../quiz/entities/quiz.entity';
 import { QuizOption } from '../quiz-option/entities/quiz-option.entity';
 import { Roleplay } from '../roleplay/entities/roleplay.entity';
@@ -11,10 +10,8 @@ import { RoleplayTurn } from '../roleplay-turn/entities/roleplay-turn.entity';
 @Injectable()
 export class LevelContentService {
   constructor(
-    @InjectRepository(UnitLevel)
-    private readonly unitLevelRepository: Repository<UnitLevel>,
-    @InjectRepository(ContentItem)
-    private readonly contentItemRepository: Repository<ContentItem>,
+    @InjectRepository(Level)
+    private readonly levelRepository: Repository<Level>,
     @InjectRepository(Quiz)
     private readonly quizRepository: Repository<Quiz>,
     @InjectRepository(QuizOption)
@@ -25,104 +22,119 @@ export class LevelContentService {
     private readonly roleplayTurnRepository: Repository<RoleplayTurn>,
   ) {}
 
-  async getLevelContent(levelId: number) {
-    // Get level information
-    const level = await this.unitLevelRepository.findOne({
+  async getLevelContent(levelId: string) {
+    // Get level information with its content
+    const level = await this.levelRepository.findOne({
       where: { id: levelId },
+      relations: ['unit'],
     });
 
     if (!level) {
       throw new NotFoundException('Level not found');
     }
 
-    // Get all content items for this level
-    const contentItems = await this.contentItemRepository.find({
-      where: { unit_level_id: levelId },
+    const response = {
+      id: level.id,
+      level: level.level,
+      name: level.name,
+      description: level.description,
+      title: level.title,
+      content: level.content,
+      objective: level.objective,
+      content_type: level.content_type,
+      position: level.position,
+      unit_id: level.unit_id,
+      metadata: level.metadata,
+      unit: level.unit,
+      quiz: null,
+      roleplay: null,
+    };
+
+    // Fetch specific content based on content_type
+    if (level.content_type === 'quiz') {
+      const quiz = await this.quizRepository.findOne({
+        where: { level_id: levelId },
+      });
+
+      if (quiz) {
+        const options = await this.quizOptionRepository.find({
+          where: { quiz_id: quiz.id },
+          order: { id: 'ASC' },
+        });
+
+        response.quiz = {
+          id: quiz.id,
+          question: quiz.question,
+          explanation: quiz.explanation,
+          metadata: quiz.metadata,
+          options: options.map((option) => ({
+            id: option.id,
+            option_text: option.option_text,
+            is_correct: option.is_correct,
+            metadata: option.metadata,
+          })),
+        };
+      }
+    } else if (level.content_type === 'roleplay') {
+      const roleplay = await this.roleplayRepository.findOne({
+        where: { level_id: levelId },
+      });
+
+      if (roleplay) {
+        const turns = await this.roleplayTurnRepository.find({
+          where: { roleplay_id: roleplay.id },
+          order: { turn_order: 'ASC' },
+        });
+
+        response.roleplay = {
+          id: roleplay.id,
+          scenario: roleplay.scenario,
+          instructions: roleplay.instructions,
+          character_name: roleplay.character_name,
+          character_description: roleplay.character_description,
+          metadata: roleplay.metadata,
+          turns: turns.map((turn) => ({
+            id: turn.id,
+            turn_order: turn.turn_order,
+            speaker: turn.speaker,
+            message: turn.message,
+            metadata: turn.metadata,
+          })),
+        };
+      }
+    }
+
+    return response;
+  }
+
+  async getAllLevelsContent() {
+    const levels = await this.levelRepository.find({
+      relations: ['unit'],
       order: { position: 'ASC' },
     });
 
-    // Process each content item and fetch related data
-    const content = await Promise.all(
-      contentItems.map(async (item) => {
-        const baseContent = {
-          id: item.id,
-          content_type: item.content_type,
-          title: item.title,
-          description: item.description,
-          position: item.position,
-          metadata: item.metadata,
-          quiz: null,
-          roleplay: null,
-        };
-
-        if (item.content_type === 'quiz') {
-          // Fetch quiz with options using content_item_id
-          const quiz = await this.quizRepository.findOne({
-            where: { content_item_id: item.id },
-          });
-
-          if (quiz) {
-            const options = await this.quizOptionRepository.find({
-              where: { quiz_id: quiz.id },
-              order: { id: 'ASC' },
-            });
-
-            baseContent.quiz = {
-              id: quiz.id,
-              question: quiz.question,
-              explanation: quiz.explanation,
-              metadata: quiz.metadata,
-              options: options.map((option) => ({
-                id: option.id,
-                option_text: option.option_text,
-                is_correct: option.is_correct,
-                metadata: option.metadata,
-              })),
-            };
-          }
-        } else if (item.content_type === 'roleplay') {
-          // Fetch roleplay with turns using content_item_id
-          const roleplay = await this.roleplayRepository.findOne({
-            where: { content_item_id: item.id },
-          });
-
-          if (roleplay) {
-            const turns = await this.roleplayTurnRepository.find({
-              where: { roleplay_id: roleplay.id },
-              order: { turn_order: 'ASC' },
-            });
-
-            baseContent.roleplay = {
-              id: roleplay.id,
-              scenario: roleplay.scenario,
-              instructions: roleplay.instructions,
-              character_name: roleplay.character_name,
-              character_description: roleplay.character_description,
-              metadata: roleplay.metadata,
-              turns: turns.map((turn) => ({
-                id: turn.id,
-                speaker: turn.speaker,
-                message: turn.message,
-                turn_order: turn.turn_order,
-                metadata: turn.metadata,
-              })),
-            };
-          }
-        }
-
-        return baseContent;
+    const levelsWithContent = await Promise.all(
+      levels.map(async (level) => {
+        return this.getLevelContent(level.id);
       }),
     );
 
-    return {
-      level: {
-        id: level.id,
-        name: level.name,
-        description: level.description,
-        position: level.position,
-        metadata: level.metadata,
-      },
-      content,
-    };
+    return levelsWithContent;
+  }
+
+  async getLevelsByUnit(unitId: number) {
+    const levels = await this.levelRepository.find({
+      where: { unit_id: unitId },
+      relations: ['unit'],
+      order: { position: 'ASC' },
+    });
+
+    const levelsWithContent = await Promise.all(
+      levels.map(async (level) => {
+        return this.getLevelContent(level.id);
+      }),
+    );
+
+    return levelsWithContent;
   }
 }

@@ -159,7 +159,7 @@ export class RoleplayController {
   })
   findAll(@Query('contentItemId') contentItemId?: string) {
     if (contentItemId) {
-      return this.roleplayService.findByContentItem(+contentItemId);
+      return this.roleplayService.findByLevel(contentItemId);
     }
     return this.roleplayService.findAll();
   }

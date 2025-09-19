@@ -54,19 +54,19 @@ JOIN (VALUES
 
 -- Step 4: Insert some basic content items
 WITH level_data AS (
-  SELECT ul.id as unit_level_id, ul.position 
+  SELECT ul.id as level_id, ul.position 
   FROM unit_levels ul
   JOIN units u ON ul.unit_id = u.id
   WHERE u.program_id = (SELECT id FROM programs WHERE title = 'Bahasa Indonesia untuk Penutur Asing Level 1' LIMIT 1)
 )
-INSERT INTO content_items (content_type, title, description, content, position, unit_level_id, metadata, "createdAt", "updatedAt")
+INSERT INTO content_items (content_type, title, description, content, position, level_id, metadata, "createdAt", "updatedAt")
 SELECT 
   content_data.content_type::content_items_content_type_enum,
   content_data.title,
   content_data.description,
   content_data.content,
   content_data.position,
-  l.unit_level_id,
+  l.level_id,
   content_data.metadata::jsonb,
   NOW(),
   NOW()

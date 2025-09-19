@@ -362,7 +362,7 @@ export class UnitController {
     },
   })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.unitService.findOne(id);
+    return this.unitService.findOne(id.toString());
   }
 
   @Patch(':id')
@@ -511,7 +511,7 @@ export class UnitController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUnitDto: UpdateUnitDto,
   ) {
-    return this.unitService.update(id, updateUnitDto);
+    return this.unitService.update(id.toString(), updateUnitDto);
   }
 
   @Delete(':id')
@@ -573,6 +573,6 @@ export class UnitController {
     },
   })
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.unitService.remove(id);
+    return this.unitService.remove(id.toString());
   }
 }

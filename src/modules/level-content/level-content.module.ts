@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UnitLevel } from '../unit-level/entities/unit-level.entity';
-import { ContentItem } from '../content-item/entities/content-item.entity';
+import { Level } from '../levels/entities/level.entity';
 import { Quiz } from '../quiz/entities/quiz.entity';
 import { QuizOption } from '../quiz-option/entities/quiz-option.entity';
 import { Roleplay } from '../roleplay/entities/roleplay.entity';
@@ -11,14 +10,7 @@ import { LevelContentService } from './level-content.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      UnitLevel,
-      ContentItem,
-      Quiz,
-      QuizOption,
-      Roleplay,
-      RoleplayTurn,
-    ]),
+    TypeOrmModule.forFeature([Level, Quiz, QuizOption, Roleplay, RoleplayTurn]),
   ],
   controllers: [LevelContentController],
   providers: [LevelContentService],

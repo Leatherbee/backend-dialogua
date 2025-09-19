@@ -12,14 +12,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { ProgramModule } from './modules/program/program.module';
-import { ContentItemModule } from './modules/content-item/content-item.module';
 import { FormQuestionModule } from './modules/form-question/form-question.module';
 import { FormFieldModule } from './modules/form-field/form-field.module';
 import { RoleplayModule } from './modules/roleplay/roleplay.module';
 import { RoleplayTurnModule } from './modules/roleplay-turn/roleplay-turn.module';
 import { UserLevelProgressModule } from './modules/user-level-progress/user-level-progress.module';
 import { UnitModule } from './modules/unit/unit.module';
-import { UnitLevelModule } from './modules/unit-level/unit-level.module';
+import { LevelsModule } from './modules/levels/levels.module';
 import { MediaAssetModule } from './modules/media-asset/media-asset.module';
 import { RoleplayAttemptModule } from './modules/roleplay-attempt/roleplay-attempt.module';
 import { MatchingPairModule } from './modules/matching-pair/matching-pair.module';
@@ -43,14 +42,13 @@ import { AuthGuard } from './modules/auth/guards/auth.guard';
     HealthModule,
 
     ProgramModule,
-    ContentItemModule,
     FormQuestionModule,
     FormFieldModule,
     RoleplayModule,
     RoleplayTurnModule,
     UserLevelProgressModule,
     UnitModule,
-    UnitLevelModule,
+    LevelsModule,
     MediaAssetModule,
     RoleplayAttemptModule,
     MatchingPairModule,

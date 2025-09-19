@@ -17,18 +17,40 @@ export class UnitLevelService {
   }
 
   async findAll(): Promise<UnitLevel[]> {
-    return await this.unitLevelRepository.find({
-      relations: ['unit'],
-      order: { position: 'ASC' },
-    });
+    return await this.unitLevelRepository
+      .createQueryBuilder('unitLevel')
+      .leftJoinAndSelect('unitLevel.unit', 'unit')
+      .leftJoinAndSelect('unit.program', 'program')
+      .leftJoinAndSelect('unitLevel.contentItems', 'contentItems')
+      .leftJoinAndSelect('contentItems.mediaAsset', 'mediaAsset')
+      .leftJoinAndSelect('contentItems.quiz', 'quiz')
+      .leftJoinAndSelect('quiz.options', 'quizOptions')
+      .leftJoinAndSelect('contentItems.roleplay', 'roleplay')
+      .leftJoinAndSelect('roleplay.turns', 'roleplayTurns')
+      .orderBy('unitLevel.position', 'ASC')
+      .addOrderBy('contentItems.position', 'ASC')
+      .addOrderBy('quizOptions.id', 'ASC')
+      .addOrderBy('roleplayTurns.turn_order', 'ASC')
+      .getMany();
   }
 
   async findByUnit(unitId: number): Promise<UnitLevel[]> {
-    return await this.unitLevelRepository.find({
-      where: { unit_id: unitId },
-      relations: ['unit'],
-      order: { position: 'ASC' },
-    });
+    return await this.unitLevelRepository
+      .createQueryBuilder('unitLevel')
+      .leftJoinAndSelect('unitLevel.unit', 'unit')
+      .leftJoinAndSelect('unit.program', 'program')
+      .leftJoinAndSelect('unitLevel.contentItems', 'contentItems')
+      .leftJoinAndSelect('contentItems.mediaAsset', 'mediaAsset')
+      .leftJoinAndSelect('contentItems.quiz', 'quiz')
+      .leftJoinAndSelect('quiz.options', 'quizOptions')
+      .leftJoinAndSelect('contentItems.roleplay', 'roleplay')
+      .leftJoinAndSelect('roleplay.turns', 'roleplayTurns')
+      .where('unitLevel.unit_id = :unitId', { unitId })
+      .orderBy('unitLevel.position', 'ASC')
+      .addOrderBy('contentItems.position', 'ASC')
+      .addOrderBy('quizOptions.id', 'ASC')
+      .addOrderBy('roleplayTurns.turn_order', 'ASC')
+      .getMany();
   }
 
   async findOne(id: number): Promise<UnitLevel> {
