@@ -22,29 +22,29 @@ export class UserLevelProgressService {
 
   async findAll(): Promise<UserLevelProgress[]> {
     return await this.userLevelProgressRepository.find({
-      relations: ['user'],
+      relations: ['user', 'unitLevel'],
     });
   }
 
   async findByUser(userId: string): Promise<UserLevelProgress[]> {
     return await this.userLevelProgressRepository.find({
       where: { user_id: userId },
-      relations: ['user'],
-      order: { level_id: 'ASC' },
+      relations: ['user', 'unitLevel'],
+      order: { unit_level_id: 'ASC' },
     });
   }
 
-  async findByLevel(levelId: number): Promise<UserLevelProgress[]> {
+  async findByUnitLevel(unitLevelId: number): Promise<UserLevelProgress[]> {
     return await this.userLevelProgressRepository.find({
-      where: { level_id: levelId },
-      relations: ['user'],
+      where: { unit_level_id: unitLevelId },
+      relations: ['user', 'unitLevel'],
     });
   }
 
   async findOne(id: number): Promise<UserLevelProgress> {
     const userLevelProgress = await this.userLevelProgressRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'unitLevel'],
     });
 
     if (!userLevelProgress) {
@@ -54,13 +54,13 @@ export class UserLevelProgressService {
     return userLevelProgress;
   }
 
-  async findByUserAndLevel(
+  async findByUserAndUnitLevel(
     userId: string,
-    levelId: number,
+    unitLevelId: number,
   ): Promise<UserLevelProgress | null> {
     return await this.userLevelProgressRepository.findOne({
-      where: { user_id: userId, level_id: levelId },
-      relations: ['user'],
+      where: { user_id: userId, unit_level_id: unitLevelId },
+      relations: ['user', 'unitLevel'],
     });
   }
 
@@ -88,15 +88,18 @@ export class UserLevelProgressService {
 
   async markCompleted(
     userId: string,
-    levelId: number,
+    unitLevelId: number,
     score?: number,
   ): Promise<UserLevelProgress> {
-    let userLevelProgress = await this.findByUserAndLevel(userId, levelId);
+    let userLevelProgress = await this.findByUserAndUnitLevel(
+      userId,
+      unitLevelId,
+    );
 
     if (!userLevelProgress) {
       userLevelProgress = await this.create({
         user_id: userId,
-        level_id: levelId,
+        unit_level_id: unitLevelId,
         completed: true,
         score,
         attempts: 1,

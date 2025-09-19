@@ -15,6 +15,9 @@ export class UnitLevel {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'int', default: 1 })
+  level: number;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 

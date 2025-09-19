@@ -9,9 +9,10 @@ import {
   Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { UnitLevel } from '../../unit-level/entities/unit-level.entity';
 
 @Entity('user_level_progress')
-@Unique(['user_id', 'level_id'])
+@Unique(['user_id', 'unit_level_id'])
 export class UserLevelProgress {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,7 +21,7 @@ export class UserLevelProgress {
   user_id: string;
 
   @Column({ type: 'int' })
-  level_id: number;
+  unit_level_id: number;
 
   @Column({ type: 'boolean', default: false })
   completed: boolean;
@@ -45,5 +46,7 @@ export class UserLevelProgress {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  // Level relation will be added when Level entity is available
+  @ManyToOne(() => UnitLevel)
+  @JoinColumn({ name: 'unit_level_id' })
+  unitLevel: UnitLevel;
 }

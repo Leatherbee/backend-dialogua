@@ -10,7 +10,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LevelsModule } from './modules/levels/levels.module';
+
 import { ProgramModule } from './modules/program/program.module';
 import { ContentItemModule } from './modules/content-item/content-item.module';
 import { FormQuestionModule } from './modules/form-question/form-question.module';
@@ -39,7 +39,7 @@ import { AuthGuard } from './modules/auth/guards/auth.guard';
     SharedModule,
     CommonModule,
     HealthModule,
-    LevelsModule,
+
     ProgramModule,
     ContentItemModule,
     FormQuestionModule,

@@ -16,6 +16,9 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiBody,
+  ApiParam,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { LevelsService } from './levels.service';
 import { CreateLevelDto } from './dto/create-level.dto';
@@ -30,14 +33,29 @@ export class LevelsController {
   @Post()
   @UseInterceptors(FileInterceptor('banner'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Create a new level' })
+  @ApiOperation({
+    summary: 'Create a new level',
+    description:
+      'Creates a new level with the provided information and optional banner image',
+  })
   @ApiResponse({
     status: 201,
-    description: 'The level has been successfully created.',
+    description: 'Level successfully created',
     type: Level,
   })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data or validation errors',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'array', items: { type: 'string' } },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
   @ApiBody({
-    description: 'Create a new level with an optional banner image',
+    description: 'Level creation data with optional banner image upload',
     type: CreateLevelDto,
   })
   create(
@@ -51,10 +69,13 @@ export class LevelsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all levels' })
+  @ApiOperation({
+    summary: 'Get all levels',
+    description: 'Retrieves all levels ordered by level number',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Return all levels.',
+    description: 'List of levels successfully retrieved',
     type: [Level],
   })
   findAll() {
@@ -62,9 +83,48 @@ export class LevelsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a level by ID' })
-  @ApiResponse({ status: 200, description: 'Return the level.', type: Level })
-  @ApiResponse({ status: 404, description: 'Level not found.' })
+  @ApiOperation({
+    summary: 'Get level by ID',
+    description: 'Retrieves a specific level by its unique identifier',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'The unique identifier of the level',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Level successfully retrieved',
+    type: Level,
+  })
+  @ApiNotFoundResponse({
+    description: 'Level not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example:
+            'Level with ID 123e4567-e89b-12d3-a456-426614174000 not found',
+        },
+        error: { type: 'string', example: 'Not Found' },
+        statusCode: { type: 'number', example: 404 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Invalid UUID format' },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
   findOne(@Param('id') id: string) {
     return this.levelsService.findOne(id);
   }
@@ -72,15 +132,51 @@ export class LevelsController {
   @Patch(':id')
   @UseInterceptors(FileInterceptor('banner'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Update a level' })
+  @ApiOperation({
+    summary: 'Update level',
+    description:
+      'Updates an existing level with the provided information and optional banner image',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'The unique identifier of the level to update',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiResponse({
     status: 200,
-    description: 'The level has been successfully updated.',
+    description: 'Level successfully updated',
     type: Level,
   })
-  @ApiResponse({ status: 404, description: 'Level not found.' })
+  @ApiNotFoundResponse({
+    description: 'Level not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example:
+            'Level with ID 123e4567-e89b-12d3-a456-426614174000 not found',
+        },
+        error: { type: 'string', example: 'Not Found' },
+        statusCode: { type: 'number', example: 404 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data or UUID format',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'array', items: { type: 'string' } },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
   @ApiBody({
-    description: 'Update a level with an optional banner image',
+    description: 'Level update data with optional banner image upload',
     type: UpdateLevelDto,
   })
   update(
@@ -97,12 +193,53 @@ export class LevelsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a level' })
+  @ApiOperation({
+    summary: 'Delete level',
+    description: 'Permanently deletes a level from the system',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    description: 'The unique identifier of the level to delete',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiResponse({
     status: 200,
-    description: 'The level has been successfully deleted.',
+    description: 'Level successfully deleted',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Level deleted successfully' },
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Level not found.' })
+  @ApiNotFoundResponse({
+    description: 'Level not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example:
+            'Level with ID 123e4567-e89b-12d3-a456-426614174000 not found',
+        },
+        error: { type: 'string', example: 'Not Found' },
+        statusCode: { type: 'number', example: 404 },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Invalid UUID format' },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
   remove(@Param('id') id: string) {
     return this.levelsService.remove(id);
   }
