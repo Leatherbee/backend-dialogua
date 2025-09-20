@@ -16,7 +16,7 @@ import { AppConfigModule } from '../config/config.module';
         password: configService.get('DB_PASSWORD') || 'postgres',
         database: configService.get('DB_NAME') || 'dialogua',
         autoLoadEntities: true,
-        synchronize: true, // Set to false in production
+        synchronize: false, // Using migrations instead of auto-sync
         logging: false,
       }),
       inject: [ConfigService],

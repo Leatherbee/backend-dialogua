@@ -2,74 +2,60 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
   ManyToOne,
   OneToMany,
-  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Unique,
 } from 'typeorm';
-import { Unit } from '../../unit/entities/unit.entity';
-import { ContentType } from '../../../common/enums';
-import { Quiz } from '../../quiz/entities/quiz.entity';
-import { Roleplay } from '../../roleplay/entities/roleplay.entity';
+import { Program } from '../../programs/entities/program.entity';
+import { LevelContentType } from '../../../common/enums/database.enums';
+import { Quiz } from '../../quizzes/entities/quiz.entity';
+import { Roleplay } from '../../roleplays/entities/roleplay.entity';
 
-@Entity('levels')
+@Entity({ name: 'levels' })
+@Unique('UQ_program_level_number', ['program', 'levelNumber'])
 export class Level {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'int', default: 1 })
-  level: number;
+  @ManyToOne(() => Program, (p) => p.levels, { onDelete: 'CASCADE' })
+  program: Program;
 
-  @Column({ type: 'varchar', length: 255 })
-  name: string;
-
-  @Column({ type: 'text', nullable: true })
-  description: string;
-
-  @Column({ type: 'int', default: 0 })
-  position: number;
+  @Column({ name: 'level_number', type: 'int' })
+  levelNumber: number;
 
   @Column({
+    name: 'content_type',
     type: 'enum',
-    enum: ContentType,
-    nullable: false,
+    enum: LevelContentType,
   })
-  content_type: ContentType;
+  contentType: LevelContentType;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  title: string;
+  title: string | null;
+
+  @Column({ type: 'text' })
+  description: string;
+
+  @Column({ name: 'unit_number', type: 'int', nullable: true })
+  unitNumber: number | null;
+
+  @Column({ name: 'unit_name', type: 'varchar', length: 255, nullable: true })
+  unitName: string | null;
 
   @Column({ type: 'text', nullable: true })
-  content: string;
+  objective: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  objective: string;
-
-  @Column({ type: 'int' })
-  unit_id: number;
-
-  @Column({ type: 'jsonb', default: () => "'{}'" })
-  metadata: Record<string, any>;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'createdAt' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updatedAt' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
-  deletedAt: Date;
-
-  // Relations
-  @ManyToOne(() => Unit)
-  @JoinColumn({ name: 'unit_id' })
-  unit: Unit;
-
-  @OneToMany(() => Quiz, (quiz) => quiz.level)
+  @OneToMany(() => Quiz, (q) => q.level)
   quizzes: Quiz[];
 
-  @OneToMany(() => Roleplay, (roleplay) => roleplay.level)
+  @OneToMany(() => Roleplay, (rp) => rp.level)
   roleplays: Roleplay[];
 }

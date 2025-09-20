@@ -752,7 +752,7 @@ export class ConversationsController {
       const audioStream = await this.textToSpeechService.generateSpeechStream(
         message,
         'tts-1',
-        'alloy',
+        'echo',
         'mp3',
         1.0,
       );
