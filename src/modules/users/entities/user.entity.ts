@@ -7,8 +7,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { UserLevelProgress } from '../../user-level-progress/entities/user-level-progress.entity';
-import { RoleplayAttempt } from '../../roleplay-attempt/entities/roleplay-attempt.entity';
+import { UserLevelProgress } from '../../progress/entities/progress.entity';
 
 @Entity('users')
 export class User {
@@ -36,10 +35,6 @@ export class User {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  // Relations
   @OneToMany(() => UserLevelProgress, (progress) => progress.user)
-  userLevelProgress: UserLevelProgress[];
-
-  @OneToMany(() => RoleplayAttempt, (attempt) => attempt.user)
-  roleplayAttempts: RoleplayAttempt[];
+  progress: UserLevelProgress[];
 }
