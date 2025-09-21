@@ -7,6 +7,7 @@ import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiUnauthorizedResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/register.dto';
@@ -199,5 +200,51 @@ export class AuthController {
   })
   async loginApple(@Body() dto: AppleLoginDto): Promise<AuthResponse> {
     return this.authService.loginWithApple(dto.token);
+  }
+
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  @ApiOperation({
+    summary: 'User logout',
+    description: 'Logs out the user by invalidating their refresh token.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refresh_token: {
+          type: 'string',
+          description: 'The refresh token to invalidate',
+        },
+      },
+      required: ['refresh_token'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User successfully logged out',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Successfully logged out' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or expired refresh token',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Invalid refresh token' },
+        error: { type: 'string', example: 'Unauthorized' },
+        statusCode: { type: 'number', example: 401 },
+      },
+    },
+  })
+  async logout(
+    @Body() body: { refresh_token: string },
+  ): Promise<{ message: string }> {
+    return this.authService.logout(body.refresh_token);
   }
 }

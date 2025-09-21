@@ -11,6 +11,8 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { QuizSubmissionResponseDto } from './dto/quiz-submission-response.dto';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('quizzes')
@@ -41,6 +43,22 @@ export class QuizzesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto) {
     return this.quizzesService.update(id, updateQuizDto);
+  }
+
+  @Post(':id/submit')
+  @ApiOperation({ summary: 'Submit quiz answers' })
+  @ApiResponse({
+    status: 200,
+    description: 'Quiz submitted successfully',
+    type: QuizSubmissionResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Quiz not found' })
+  @ApiResponse({ status: 400, description: 'Invalid submission data' })
+  submitQuiz(
+    @Param('id') id: string,
+    @Body() submitQuizDto: SubmitQuizDto,
+  ): Promise<QuizSubmissionResponseDto> {
+    return this.quizzesService.submitQuiz(id, submitQuizDto);
   }
 
   @Delete(':id')

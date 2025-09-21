@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Delete,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -100,6 +102,42 @@ export class UserController {
   })
   findAll() {
     return this.userService.findAll();
+  }
+
+  @ApiBearerAuth()
+  @Get('me')
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description: 'Retrieves the profile of the currently authenticated user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Current user profile successfully retrieved',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        first_name: { type: 'string' },
+        last_name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Unauthorized' },
+        statusCode: { type: 'number', example: 401 },
+      },
+    },
+  })
+  getCurrentUser(@Request() req: any) {
+    return this.userService.findOne(req.user.sub);
   }
 
   @Get(':id')

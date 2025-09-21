@@ -21,7 +21,7 @@ export class LevelsService {
 
     return this.levelRepository.find({
       where: whereCondition,
-      relations: ['program'],
+      relations: ['program', 'quizzes', 'roleplays'],
       order: { levelNumber: 'ASC' },
     });
   }
