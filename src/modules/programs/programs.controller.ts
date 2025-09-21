@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ProgramsService } from './programs.service';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('programs')
 @Public()
 @Controller('programs')
 export class ProgramsController {
@@ -23,18 +25,20 @@ export class ProgramsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all programs' })
+  @ApiResponse({ status: 200, description: 'Returns all programs' })
   findAll() {
     return this.programsService.findAll();
-  }
-
-  @Get(':id/levels')
-  findLevels(@Param('id') id: string) {
-    return this.programsService.findLevelsByProgramId(id);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.programsService.findOne(id);
+  }
+
+  @Get(':id/levels')
+  findLevels(@Param('id') id: string) {
+    return this.programsService.findLevelsByProgramId(id);
   }
 
   @Patch(':id')

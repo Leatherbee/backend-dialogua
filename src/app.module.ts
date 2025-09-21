@@ -31,6 +31,8 @@ import { RoleplayTurn } from './modules/roleplays/entities/roleplay-turn.entity'
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { SyncModule } from './modules/sync/sync.module';
+import { UpdateData } from './modules/sync/entities/sync.entity';
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { join } from 'path';
       Roleplay,
       RoleplayTurn,
       RefreshToken,
+      UpdateData,
     ]),
     AppConfigModule,
     DatabaseModule,
@@ -68,6 +71,7 @@ import { join } from 'path';
     QuizzesModule,
     RoleplaysModule,
     ProgressModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [

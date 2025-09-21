@@ -67,6 +67,19 @@ export class AuthService {
     return this.generateAuthResponse(token.user);
   }
 
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    const token =
+      await this.refreshTokenRepository.findRefreshToken(refreshToken);
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    await this.refreshTokenRepository.deleteRefreshToken(refreshToken);
+
+    return { message: 'Successfully logged out' };
+  }
+
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.password))) {
