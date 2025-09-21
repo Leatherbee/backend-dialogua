@@ -23,7 +23,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'secretKey',
-        signOptions: { expiresIn: '15m' },
+        signOptions: { expiresIn: '14d' },
       }),
       inject: [ConfigService],
     }),

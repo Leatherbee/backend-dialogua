@@ -23,7 +23,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import type { UUID } from 'crypto';
 
 @ApiTags('Users')
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

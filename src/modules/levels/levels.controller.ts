@@ -8,11 +8,13 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateLevelDto } from './dto/create-level.dto';
 import { UpdateLevelDto } from './dto/update-level.dto';
 import { LevelsService } from './levels.service';
 import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('levels')
 @Public()
 @Controller('levels')
 export class LevelsController {
@@ -24,20 +26,40 @@ export class LevelsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all levels or filter by level number' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all levels or filtered by level number',
+  })
   findAll(@Query('levelNumber') levelNumber?: string) {
-    if (levelNumber) {
-      const levelNum = parseInt(levelNumber, 10);
-      if (isNaN(levelNum)) {
-        throw new Error('levelNumber must be a valid number');
-      }
-      return this.levelsService.findByLevelNumber(levelNum);
-    }
-    return this.levelsService.findAll();
+    return this.levelsService.findAll(
+      levelNumber ? parseInt(levelNumber, 10) : undefined,
+    );
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.levelsService.findOne(id);
+  }
+
+  @Get(':id/quizzes')
+  @ApiOperation({ summary: 'Get quizzes for a specific level' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all quizzes for the level',
+  })
+  findQuizzes(@Param('id') id: string) {
+    return this.levelsService.findQuizzes(id);
+  }
+
+  @Get(':id/roleplays')
+  @ApiOperation({ summary: 'Get roleplays for a specific level' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all roleplays for the level',
+  })
+  findRoleplays(@Param('id') id: string) {
+    return this.levelsService.findRoleplays(id);
   }
 
   @Patch(':id')
@@ -48,15 +70,5 @@ export class LevelsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.levelsService.remove(id);
-  }
-
-  @Get(':id/quizzes')
-  findQuizzes(@Param('id') id: string) {
-    return this.levelsService.findQuizzesByLevelId(id);
-  }
-
-  @Get(':id/roleplays')
-  findRoleplays(@Param('id') id: string) {
-    return this.levelsService.findRoleplaysByLevelId(id);
   }
 }
