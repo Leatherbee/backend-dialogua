@@ -40,7 +40,10 @@ export class LevelsService {
         relations: [
           'quizzes',
           'quizzes.options',
+          'quizzes.options.media',
           'quizzes.matchingPairs',
+          'quizzes.matchingPairs.leftMedia',
+          'quizzes.matchingPairs.rightMedia',
           'quizzes.media',
         ],
       })
@@ -56,7 +59,7 @@ export class LevelsService {
       .then((level) => level?.roleplays || []);
   }
 
-  update(id: string, _: UpdateLevelDto) {
+  update(id: string, updateLevelDto: UpdateLevelDto) {
     return `This action updates a #${id} level`;
   }
 

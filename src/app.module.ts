@@ -29,20 +29,12 @@ import { QuizMatchingPair } from './modules/quizzes/entities/quiz-matching-pair.
 import { Roleplay } from './modules/roleplays/entities/roleplay.entity';
 import { RoleplayTurn } from './modules/roleplays/entities/roleplay-turn.entity';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+
 import { SyncModule } from './modules/sync/sync.module';
 import { UpdateData } from './modules/sync/entities/sync.entity';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'assets'),
-      exclude: ['/api/{*test}'],
-      serveStaticOptions: {
-        fallthrough: false,
-      },
-    }),
     TypeOrmModule.forFeature([
       User,
       UserLevelProgress,
