@@ -177,21 +177,23 @@ export class ConversationsController {
     }
   }
 
-  @Post('text-to-speech')
+  @Post('text-to-speech/base64')
   @ApiOperation({
-    summary: 'Convert text to speech',
+    summary: 'Convert text to speech (Base64)',
     description:
-      'Generate audio from text with customizable voice and format options',
+      'Generate audio from text and return as base64 string with customizable voice and format options',
   })
-  @ApiProduces('audio/mpeg')
   @ApiResponse({
     status: 200,
-    description: 'Audio generated successfully',
-    content: {
-      'audio/mpeg': {
-        schema: {
+    description: 'Audio generated successfully as base64',
+    schema: {
+      type: 'object',
+      properties: {
+        audio: {
           type: 'string',
-          format: 'binary',
+          description: 'Base64 encoded audio data',
+          example:
+            'UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT...',
         },
       },
     },
@@ -200,7 +202,7 @@ export class ConversationsController {
     status: 500,
     description: 'Failed to generate speech',
   })
-  async generateSpeech(@Body() generateSpeechDto: GenerateSpeechDto) {
+  async generateSpeechBase64(@Body() generateSpeechDto: GenerateSpeechDto) {
     try {
       const audioBuffer = await this.textToSpeechService.generateSpeech(
         generateSpeechDto.text,
@@ -220,15 +222,16 @@ export class ConversationsController {
     }
   }
 
-  @Post('text-to-speech/emotion')
+  @Post('text-to-speech')
   @ApiOperation({
-    summary: 'Convert text to speech with emotion',
-    description: 'Generate audio from text with emotional tone variations',
+    summary: 'Convert text to speech (Binary)',
+    description:
+      'Generate audio from text and return as binary MP3 file with customizable voice and format options',
   })
   @ApiProduces('audio/mpeg')
   @ApiResponse({
     status: 200,
-    description: 'Emotional speech generated successfully',
+    description: 'Audio generated successfully as binary',
     content: {
       'audio/mpeg': {
         schema: {
@@ -240,9 +243,59 @@ export class ConversationsController {
   })
   @ApiResponse({
     status: 500,
+    description: 'Failed to generate speech',
+  })
+  async generateSpeech(
+    @Body() generateSpeechDto: GenerateSpeechDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const audioBuffer = await this.textToSpeechService.generateSpeech(
+        generateSpeechDto.text,
+        {
+          voice: generateSpeechDto.voice as any,
+          format: generateSpeechDto.format as any,
+        },
+      );
+
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length.toString());
+      res.setHeader('Content-Disposition', 'attachment; filename="speech.mp3"');
+      res.send(audioBuffer);
+    } catch {
+      throw new HttpException(
+        'Failed to generate speech',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('text-to-speech/emotion/base64')
+  @ApiOperation({
+    summary: 'Convert text to speech with emotion (Base64)',
+    description:
+      'Generate audio from text with emotional tone variations and return as base64',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Emotional speech generated successfully as base64',
+    schema: {
+      type: 'object',
+      properties: {
+        audio: {
+          type: 'string',
+          description: 'Base64 encoded audio data with emotion',
+          example:
+            'UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
     description: 'Failed to generate emotional speech',
   })
-  async generateSpeechWithEmotion(
+  async generateSpeechWithEmotionBase64(
     @Body() generateSpeechWithEmotionDto: GenerateSpeechWithEmotionDto,
   ) {
     try {
@@ -263,16 +316,110 @@ export class ConversationsController {
     }
   }
 
-  @Post('text-to-speech/conversation')
+  @Post('text-to-speech/emotion')
   @ApiOperation({
-    summary: 'Convert text to speech for conversation',
+    summary: 'Convert text to speech with emotion (Binary)',
     description:
-      'Generate audio optimized for conversation context with speaker differentiation',
+      'Generate audio from text with emotional tone variations and return as binary MP3',
   })
   @ApiProduces('audio/mpeg')
   @ApiResponse({
     status: 200,
-    description: 'Conversation speech generated successfully',
+    description: 'Emotional speech generated successfully as binary',
+    content: {
+      'audio/mpeg': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to generate emotional speech',
+  })
+  async generateSpeechWithEmotion(
+    @Body() generateSpeechWithEmotionDto: GenerateSpeechWithEmotionDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const audioBuffer = await this.textToSpeechService.generateSpeech(
+        generateSpeechWithEmotionDto.text,
+        {
+          voice: 'alloy',
+        },
+      );
+
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length.toString());
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="emotion-speech.mp3"',
+      );
+      res.send(audioBuffer);
+    } catch {
+      throw new HttpException(
+        'Failed to generate speech with emotion',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('text-to-speech/conversation/base64')
+  @ApiOperation({
+    summary: 'Convert text to speech for conversation (Base64)',
+    description:
+      'Generate audio optimized for conversation context with speaker differentiation and return as base64',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation speech generated successfully as base64',
+    schema: {
+      type: 'object',
+      properties: {
+        audio: {
+          type: 'string',
+          description: 'Base64 encoded conversation audio data',
+          example:
+            'UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to generate conversation speech',
+  })
+  async generateSpeechForConversationBase64(
+    @Body() generateSpeechForConversationDto: GenerateSpeechForConversationDto,
+  ) {
+    try {
+      const audioBuffer = await this.textToSpeechService.generateSpeech(
+        generateSpeechForConversationDto.text,
+        {},
+      );
+
+      const audioBase64 = audioBuffer.toString('base64');
+      return { audio: audioBase64 };
+    } catch {
+      throw new HttpException(
+        'Failed to generate speech for conversation',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('text-to-speech/conversation')
+  @ApiOperation({
+    summary: 'Convert text to speech for conversation (Binary)',
+    description:
+      'Generate audio optimized for conversation context with speaker differentiation and return as binary MP3',
+  })
+  @ApiProduces('audio/mpeg')
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation speech generated successfully as binary',
     content: {
       'audio/mpeg': {
         schema: {
@@ -288,6 +435,7 @@ export class ConversationsController {
   })
   async generateSpeechForConversation(
     @Body() generateSpeechForConversationDto: GenerateSpeechForConversationDto,
+    @Res() res: Response,
   ) {
     try {
       const audioBuffer = await this.textToSpeechService.generateSpeech(
@@ -295,8 +443,13 @@ export class ConversationsController {
         {},
       );
 
-      const audioBase64 = audioBuffer.toString('base64');
-      return { audio: audioBase64 };
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length.toString());
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="conversation-speech.mp3"',
+      );
+      res.send(audioBuffer);
     } catch {
       throw new HttpException(
         'Failed to generate speech for conversation',
