@@ -25,7 +25,7 @@ export class TextToSpeechService {
           Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt4o-mini-tts',
+          model: 'gpt-4o-mini-tts',
           input: text,
           voice: voice,
           response_format: format,
