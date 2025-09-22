@@ -21,11 +21,13 @@ import {
 import { ChatService } from '../services/chat.service';
 import { SpeechToTextService } from '../services/speech-to-text.service';
 import { TextToSpeechService } from '../services/text-to-speech.service';
+import { ChatToSpeechService } from '../services/chat-to-speech.service';
 import { SendMessageDto, SendMessageWithHistoryDto } from '../dto/chat.dto';
 import {
   GenerateSpeechDto,
   GenerateSpeechWithEmotionDto,
   GenerateSpeechForConversationDto,
+  ChatToSpeechDto,
 } from '../dto/tts.dto';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 
@@ -37,6 +39,7 @@ export class ConversationsController {
     private readonly chatService: ChatService,
     private readonly speechToTextService: SpeechToTextService,
     private readonly textToSpeechService: TextToSpeechService,
+    private readonly chatToSpeechService: ChatToSpeechService,
   ) {}
 
   @Post('chat')
@@ -521,5 +524,204 @@ export class ConversationsController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('chat-to-speech/base64')
+  @ApiOperation({
+    summary: 'Chat with AI and convert response to speech (Base64)',
+    description:
+      'Send a message to AI, get response, and convert the AI response to speech returned as base64',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'AI response converted to speech successfully as base64',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'Original user message',
+        },
+        aiResponse: {
+          type: 'string',
+          description: 'AI response text',
+        },
+        audio: {
+          type: 'string',
+          description: 'Base64 encoded audio of AI response',
+          example:
+            'UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to process chat-to-speech request',
+  })
+  async chatToSpeechBase64(@Body() chatToSpeechDto: ChatToSpeechDto) {
+    try {
+      // Use ChatToSpeechService for context management
+      const result =
+        await this.chatToSpeechService.sendMessageWithContextAndSpeech(
+          chatToSpeechDto.conversationId || 'default',
+          chatToSpeechDto.message,
+          {
+            systemMessage: chatToSpeechDto.systemMessage,
+            voice: chatToSpeechDto.voice as any,
+            format: chatToSpeechDto.format as any,
+          },
+        );
+
+      const audioBase64 = result.audioBuffer.toString('base64');
+      return {
+        message: chatToSpeechDto.message,
+        aiResponse: result.aiResponse,
+        audio: audioBase64,
+        conversationId: chatToSpeechDto.conversationId || 'default',
+      };
+    } catch {
+      throw new HttpException(
+        'Failed to process chat-to-speech request',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('chat-to-speech')
+  @ApiOperation({
+    summary: 'Chat with AI and convert response to speech (Binary)',
+    description:
+      'Send a message to AI, get response, and convert the AI response to speech returned as binary MP3',
+  })
+  @ApiProduces('audio/mpeg')
+  @ApiResponse({
+    status: 200,
+    description: 'AI response converted to speech successfully as binary',
+    content: {
+      'audio/mpeg': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+    headers: {
+      'X-AI-Response': {
+        description: 'The AI response text',
+        schema: {
+          type: 'string',
+        },
+      },
+      'X-User-Message': {
+        description: 'The original user message',
+        schema: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to process chat-to-speech request',
+  })
+  async chatToSpeech(
+    @Body() chatToSpeechDto: ChatToSpeechDto,
+    @Res() res: Response,
+  ) {
+    try {
+      // Use ChatToSpeechService for context management
+      const result =
+        await this.chatToSpeechService.sendMessageWithContextAndSpeech(
+          chatToSpeechDto.conversationId || 'default',
+          chatToSpeechDto.message,
+          {
+            systemMessage: chatToSpeechDto.systemMessage,
+            voice: chatToSpeechDto.voice as any,
+            format: chatToSpeechDto.format as any,
+          },
+        );
+
+      // Set headers with AI response and user message for frontend reference
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', result.audioBuffer.length.toString());
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="ai-response-speech.mp3"',
+      );
+      res.setHeader('X-AI-Response', encodeURIComponent(result.aiResponse));
+      res.setHeader(
+        'X-User-Message',
+        encodeURIComponent(chatToSpeechDto.message),
+      );
+      res.setHeader(
+        'X-Conversation-ID',
+        encodeURIComponent(chatToSpeechDto.conversationId || 'default'),
+      );
+      res.send(result.audioBuffer);
+    } catch {
+      throw new HttpException(
+        'Failed to process chat-to-speech request',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('conversation/create')
+  @ApiOperation({
+    summary: 'Create a new conversation',
+    description: 'Create a new conversation with optional system message',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        conversationId: { type: 'string', description: 'Conversation ID' },
+        systemMessage: { type: 'string', description: 'System message' },
+        createdAt: { type: 'string', description: 'Creation timestamp' },
+      },
+    },
+  })
+  async createConversation(
+    @Body() body: { conversationId: string; systemMessage?: string },
+  ) {
+    const conversation = this.chatToSpeechService.createConversation(
+      body.conversationId,
+      body.systemMessage,
+    );
+    return {
+      conversationId: conversation.conversationId,
+      systemMessage: conversation.messages.find((m) => m.role === 'system')
+        ?.content,
+      createdAt: conversation.createdAt,
+    };
+  }
+
+  @Post('conversation/:id/reset')
+  @ApiOperation({
+    summary: 'Reset conversation',
+    description: 'Reset conversation to initial state',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation reset successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', description: 'Reset success status' },
+        conversationId: { type: 'string', description: 'Conversation ID' },
+      },
+    },
+  })
+  async resetConversation(@Body() body: { conversationId: string }) {
+    const success = this.chatToSpeechService.resetConversation(
+      body.conversationId,
+    );
+    return {
+      success,
+      conversationId: body.conversationId,
+    };
   }
 }
